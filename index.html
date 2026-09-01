@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>PicsOS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Comic+Neue:wght@700&family=Impact&family=Press+Start+2P&family=DotGothic16&family=Courier+Prime&family=Creepster&family=Permanent+Marker&family=Times+New+Roman&display=swap');
+        
+        html, body { margin: 0; padding: 0; height: 100%; background: #008080; font-family: 'Tahoma', sans-serif; font-size: 11px; overflow: hidden; user-select: none; }
+        .window { display: flex; width: 100%; height: 100%; box-sizing: border-box; padding: 4px; gap: 4px; }
+        
+        .panel { background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #000000 #000000 #dfdfdf; display: flex; flex-direction: column; }
+        .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 3px 5px; font-weight: bold; font-size: 12px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+        
+        .sidebar-left { width: 175px; flex-shrink: 0; }
+        .sidebar-right { width: 385px; flex-shrink: 0; }
+        .canvas-area { flex-grow: 1; background: #808080; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        
+        .content { padding: 8px; overflow-y: auto; flex-grow: 1; }
+        .section-title { font-weight: bold; margin: 12px 0 5px 0; color: #000; border-bottom: 1px solid #808080; padding-bottom: 2px; display: flex; justify-content: space-between; align-items: flex-end; }
+        label { display: block; margin-top: 6px; margin-bottom: 2px; color: #000; font-size: 10px; }
+        
+        button { background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #000 #000 #dfdfdf; padding: 5px; cursor: pointer; font-family: 'Tahoma', sans-serif; font-size: 10px; font-weight: bold; width: 100%; margin-bottom: 4px; outline: none; transition: filter 0.1s; }
+        button:active, button.active { border-color: #000 #dfdfdf #dfdfdf #000; filter: brightness(0.85); padding: 6px 4px 4px 6px; outline: 1px dotted #000; outline-offset: -4px; }
+        .btn-reset { width: auto; font-size: 9px; padding: 2px 5px; border-color: #dfdfdf #808080 #808080 #dfdfdf; color: #800000; margin: 0; }
+        .btn-bake { background: #000080; color: #fff; border-color: #dfdfdf #000 #000 #dfdfdf; font-size: 11px; padding: 8px; margin-top: 10px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4); }
+        
+        .ui-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+        .ui-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .ui-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .ui-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+        
+        .slider-row { display: flex; align-items: center; gap: 5px; }
+        input[type="range"] { -webkit-appearance: none; flex-grow: 1; background: transparent; margin: 0; }
+        input[type="range"]:focus { outline: none; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #0078d7; border-radius: 3px; border: 1px solid #005a9e; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #0078d7; cursor: pointer; margin-top: -5px; box-shadow: 0px 1px 2px rgba(0,0,0,0.5); border: 1px solid #fff; }
+        
+        input[type="text"] { width: 38px; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; padding: 2px; text-align: center; font-size: 10px; }
+        input[type="color"] { width: 100%; height: 24px; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; padding: 0; cursor: pointer; }
+        select { width: 100%; padding: 3px; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; font-family: 'Tahoma'; font-size: 11px; }
+        
+        .gallery { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; background: #fff; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; height: 110px; overflow-y: auto; padding: 2px; }
+        .thumb { position: relative; height: 60px; cursor: pointer; border: 2px solid transparent; }
+        .thumb.active { border-color: #000080; outline: 1px dotted #fff; outline-offset: -3px; }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb .btn-gal { position: absolute; top: 2px; width: 16px; height: 16px; font-size: 8px; padding: 0; background: #e0e0e0; border: 1px solid #000; color: #000; }
+        .thumb .btn-left { left: 2px; }
+        .thumb .btn-right { left: 20px; }
+        .thumb .btn-del { right: 2px; background: #800000; color: #fff; border-color: #fff; }
+        
+        canvas { max-width: 95%; max-height: 95%; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); cursor: grab; }
+        canvas:active { cursor: grabbing; }
+        .hidden { display: none !important; }
+        
+        .c-bw { background: #555; color: white; } .c-sepia { background: #d4c3a3; color: #5c4033; } .c-neo { background: #111; color: #f0f; border-color:#f0f; } .c-sun { background: linear-gradient(180deg, #ff9a9e, #fecfef); color: #d32f2f; } .c-cy { background: #aaddff; color: #003366; } .c-rust { background: #8b3a3a; color: #ffcccc; } .c-tox { background: #00ff00; color: #003300; } .c-drm { background: linear-gradient(45deg, #ffc0cb, #e0ffff); color: #555; } .c-ani { background: linear-gradient(180deg, #ffb6c1, #ffdab9); color: #d87093; } .c-chr { background: linear-gradient(90deg, #ccc, #fff, #999); color: #000; } .c-dis { background: #e0f0e0; color: #006400; } .c-inf { background: #ffaaaa; color: #800000; } .c-lomo { background: #ffff00; color: #000; } .c-tech { background: #ff00ff; color: #ffff00; } .c-post { background: #333; color: #0ff; } .c-bld { background: #500; color: #f00; } .c-goth { background: #000; color: #ccc; border-color:#fff; } .c-past { background: #fdfd96; color: #ff6961; }
+        
+        .layer-btn { width: 22px; padding: 2px; font-size: 12px; margin: 0; }
+        .scroll-box { max-height: 180px; overflow-y: auto; padding: 4px; background: #c0c0c0; border: 1px inset #fff; }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="panel sidebar-left">
+            <div class="title-bar"><span>📁 Project</span></div>
+            <div class="content">
+                <button onclick="document.getElementById('fileIn').click()" style="padding: 9px;">Load Images...</button>
+                <input type="file" id="fileIn" multiple accept="image/*" class="hidden">
+                <div id="gallery" class="gallery"></div>
+                
+                <div style="display: flex; gap: 4px; margin-top: 8px;">
+                    <button onclick="Engine.undo()" style="color: #800000;">↶ Undo Base</button>
+                    <button onclick="location.reload()">Reset App</button>
+                </div>
+                
+                <div class="section-title"><span>Workflow</span></div>
+                <button class="nav-btn active" data-target="tab-color">1. Color Tints</button>
+                <button class="nav-btn" data-target="tab-fx">2. Shaders / FX</button>
+                <button class="nav-btn" data-target="tab-frames">3. Frames & HUD</button>
+                <button class="nav-btn" data-target="tab-stickers">4. Emoticons Layer</button>
+                <button class="nav-btn" data-target="tab-text">5. Free Text Box</button>
+                <button class="nav-btn" data-target="tab-collage">6. Collage Mode</button>
+                <button class="nav-btn" data-target="tab-export">7. Export</button>
+            </div>
+        </div>
+
+        <div class="canvas-area" id="canvasContainer">
+            <canvas id="renderCanvas" class="hidden"></canvas>
+            <div id="emptyText" style="color: #dfdfdf; font-weight: bold; font-size: 15px;">NO IMAGES LOADED</div>
+            <div id="dragTooltip" style="position: absolute; bottom: 10px; background: rgba(0,0,0,0.75); color: #0f0; padding: 5px 8px; font-family: monospace; border: 1px solid #0f0; display: none; pointer-events: none;">
+                DRAGGING... FAST RENDER ACTIVE
+            </div>
+        </div>
+
+        <div class="panel sidebar-right">
+            <div class="title-bar"><span>⚙️ Properties</span></div>
+            <div class="content">
+                
+                <div id="tab-color" class="tab-content">
+                    <div class="section-title"><span>Basic Aesthetic Matrices</span><button class="btn-reset" onclick="Reset.tabColor()">↺ Reset</button></div>
+                    <div class="scroll-box">
+                        <div class="ui-grid-3 ui-group" id="grp-color">
+                            <button class="active" data-val="none">Normal</button>
+                            <button data-val="kodak" class="c-kodak">Kodak Gold</button>
+                            <button data-val="fuji" class="c-fuji">Fuji Superia</button>
+                            <button data-val="polaroid" class="c-polaroid">Old Polaroid</button>
+                            <button data-val="bw" style="background:#555; color:#fff;">B & W</button>
+                            <button data-val="sepia" style="background:#d4c3a3; color:#5c4033;">Sepia</button>
+                            <button data-val="cold" style="background:#aaddff; color:#003366;">Cool Tint</button>
+                            <button data-val="warm" style="background:#e6c280; color:#5c4033;">Warm Tint</button>
+                            <button data-val="highsat" class="c-sat">High Saturation</button>
+                            <button data-val="muted" class="c-mut">Muted/Faded</button>
+                            <button data-val="dark" class="c-dark">Darken</button>
+                            <button data-val="light" class="c-light">Lighten</button>
+                            <button data-val="redtint" style="background:#ffcccc; color:#800000;">Red Tint</button>
+                            <button data-val="greentint" style="background:#ccffcc; color:#008000;">Green Tint</button>
+                            <button data-val="bluetint" style="background:#ccccff; color:#000080;">Blue Tint</button>
+                        </div>
+                    </div>
+                    <label style="color: #000080; font-weight: bold; margin-top:10px;">Color Filter Intensity (%)</label>
+                    <div class="slider-row"><input type="range" id="s_int" min="0" max="100" value="100"><input type="text" id="s_int_txt" readonly></div>
+                    <label>Exposure</label>
+                    <div class="slider-row"><input type="range" id="s_exp" min="-100" max="100" value="0"><input type="text" id="s_exp_txt" readonly></div>
+                    <label>Contrast</label>
+                    <div class="slider-row"><input type="range" id="s_cont" min="-100" max="100" value="0"><input type="text" id="s_cont_txt" readonly></div>
+                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 APPLY & BAKE FILTER TO IMAGE ]</button>
+                </div>
+
+                <div id="tab-fx" class="tab-content hidden">
+                    <div class="section-title"><span>Heavy Optical Shaders</span><button class="btn-reset" onclick="Reset.tabFx()">↺ Reset</button></div>
+                    <div class="scroll-box">
+                        <div class="ui-grid-2 ui-group" id="grp-shader">
+                            <button class="active" data-val="none">None</button>
+                            <button data-val="gameboy" style="background:#8bac0f; color:#0f380f; border: 2px solid #306230;">GameBoy Camera</button>
+                            <button data-val="frutiger" style="background:linear-gradient(180deg, #e0f7fa, #00bcd4); color:#006064;">Frutiger Aero</button>
+                            <button data-val="analog" style="background:#500; color:#fff;">Analog Horror</button>
+                            <button data-val="liminal" style="background:#d7d7b4; color:#3a3a20;">Liminal Haze</button>
+                            <button data-val="thermal" style="background:linear-gradient(90deg, #00f, #f00, #ff0); color:#fff; text-shadow:1px 1px #000;">Thermal Vision</button>
+                            <button data-val="night" style="background:#003300; color:#0f0;">Night Vision</button>
+                            <button data-val="retrotv" style="background:#222; color:#0ff;">Retro TV Display</button>
+                            <button data-val="vhs">VHS Trak Glitch</button>
+                            <button data-val="crt">CRT Tube Scanlines</button>
+                            <button data-val="matrix" style="background:#000; color:#0f0;">Terminal Phosphor</button>
+                            <button data-val="cga" style="background:#000; color:#f0f;">CGA 4-Color</button>
+                            <button data-val="nokia">Nokia 3310 LCD</button>
+                            <button data-val="halftone">Print Halftone</button>
+                            <button data-val="edge">Sobel Edge Detect</button>
+                            <button data-val="glitch">Datamosh Glitch</button>
+                            <button data-val="ascii">ASCII Text Art</button>
+                            <button data-val="ripple">Water Ripple</button>
+                            <button data-val="emboss">3D Emboss</button>
+                            <button data-val="invert" style="background:#000; color:#fff;">Invert Colors</button>
+                        </div>
+                    </div>
+                    <label style="color: #800000; font-weight: bold; margin-top:5px;">Shader Glitch Intensity (%)</label>
+                    <div class="slider-row"><input type="range" id="s_sint" min="0" max="100" value="100"><input type="text" id="s_sint_txt" readonly></div>
+
+                    <div class="section-title"><span>Physical Defects</span></div>
+                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_noise"> Enable Noise/Grain</label>
+                    <div class="ui-grid-2">
+                        <div><label>Grain Amount</label><div class="slider-row"><input type="range" id="s_namt" min="1" max="200" value="40"><input type="text" id="s_namt_txt" readonly></div></div>
+                        <div><label>Grain Size (Blockiness)</label><div class="slider-row"><input type="range" id="s_nsiz" min="1" max="20" value="1"><input type="text" id="s_nsiz_txt" readonly></div></div>
+                    </div>
+                    <label style="display:flex; gap:5px; margin-top:10px;"><input type="checkbox" id="c_vignette"> Heavy Lens Vignette</label>
+                    <label>Chromatic Aberration (RGB Shift)</label>
+                    <div class="slider-row"><input type="range" id="s_rgb" min="0" max="40" value="0"><input type="text" id="s_rgb_txt" readonly></div>
+                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 APPLY & BAKE SHADER TO IMAGE ]</button>
+                </div>
+
+                <div id="tab-frames" class="tab-content hidden">
+                    <div class="section-title"><span>UI & Geometric Overlays</span><button class="btn-reset" onclick="Reset.tabFrames()">↺ Reset</button></div>
+                    <div class="scroll-box" style="max-height: 120px;">
+                        <div class="ui-grid-3 ui-group" id="grp-frame">
+                            <button class="active" data-val="none">None</button>
+                            <button data-val="desmotiva" style="background:#000; color:#fff; border-color:#fff;">Desmotiva</button>
+                            <button data-val="meme" style="font-family:Impact; font-size:12px;">Meme Top/Bot</button>
+                            <button data-val="win98">Win 98</button>
+                            <button data-val="macos">Mac OS 9</button>
+                            <button data-val="polaroid">Polaroid</button>
+                            <button data-val="camcorder">Camcorder</button>
+                            <button data-val="film">Cinematic</button>
+                            <button data-val="cctv">CCTV Grid</button>
+                            <button data-val="magazine">Magazine</button>
+                            <button data-val="tv">CRT Tube</button>
+                            <button data-val="browser">IE 5.0</button>
+                            <button data-val="vhs_hud">VHS Player</button>
+                            <button data-val="gb_border">Console Bezel</button>
+                            <button data-val="cyber">Cyber HUD</button>
+                            <button data-val="warning">Warn Label</button>
+                            <button data-val="wanted" style="font-family:Times New Roman;">Wanted Poster</button>
+                            <button data-val="love">Love Border</button>
+                            <button data-val="myspace" style="background:#003399; color:#fff;">MySpace BG</button>
+                            <button data-val="gothic" style="background:#222; color:#800000; font-family:Creepster;">Gothic Frame</button>
+                            <button data-val="girly" style="background:#ffb6c1; color:#fff;">Girly Sparkle</button>
+                        </div>
+                    </div>
+
+                    <div class="section-title"><span>Frame Captions & Typography</span></div>
+                    <div class="ui-grid-2">
+                        <div>
+                            <label>Frame Font Style</label>
+                            <select id="sel_ffont">
+                                <option value="Arial">Arial (System)</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="'VT323', monospace">Digital / Terminal</option>
+                                <option value="'Press Start 2P', cursive">8-Bit Arcade</option>
+                                <option value="'Comic Sans MS', 'Comic Neue'">Comic Sans MS</option>
+                                <option value="Impact">Impact (Meme)</option>
+                                <option value="'Creepster', cursive">Creepy 90s</option>
+                            </select>
+                        </div>
+                        <div><label>Frame Text Color</label><input type="color" id="c_ffont" value="#ffffff"></div>
+                    </div>
+
+                    <label style="margin-top:8px;">Main Title (Top / Main Text)</label>
+                    <input type="text" id="t_frame_title" value="TITLE" style="width: 100%; margin-bottom: 5px; padding: 3px; box-sizing: border-box;">
+                    
+                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_frame_bot"> Enable Subtitle (Bottom Text)</label>
+                    <input type="text" id="t_frame_sub" value="Bottom Text" style="width: 100%; margin-bottom: 5px; padding: 3px; box-sizing: border-box;">
+                    
+                    <label>Overall Frame Text Size</label>
+                    <div class="slider-row"><input type="range" id="s_frm_size" min="10" max="150" value="40"><input type="text" id="s_frm_size_txt" readonly></div>
+                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE FRAME TO IMAGE ]</button>
+                </div>
+
+                <div id="tab-stickers" class="tab-content hidden">
+                    <div class="section-title"><span>Old Web Emoticons</span><button class="btn-reset" onclick="Reset.tabStickers()">↺ Clear All</button></div>
+                    <div class="scroll-box" style="max-height: 80px; margin-bottom:10px;">
+                        <div class="ui-grid-5" id="sticker-bank">
+                        </div>
+                    </div>
+
+                    <div class="section-title"><span>ASCII Art Elements</span></div>
+                    <div class="scroll-box" style="max-height: 100px;">
+                        <div class="ui-grid-3" id="ascii-bank">
+                        </div>
+                    </div>
+                    
+                    <div class="section-title"><span>Active Layers (Drag & Recolor)</span></div>
+                    <div id="active-stickers" style="display:flex; flex-direction:column; gap:2px; height:100px; overflow-y:auto; background:#fff; border: 2px solid #808080; padding:2px;">
+                    </div>
+                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE STICKERS TO IMAGE ]</button>
+                </div>
+
+                <div id="tab-text" class="tab-content hidden">
+                    <div class="section-title"><span>Interactive Free Text Box</span><button class="btn-reset" onclick="Reset.tabText()">↺ Reset</button></div>
+                    <p style="color:#000080; font-weight:bold; font-size:10px; margin: 4px 0;">* Drag the text directly inside the canvas. Scroll mouse to resize.</p>
+                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_text"> Enable Free Text Module</label>
+                    <textarea id="t_str" style="width: 100%; height:40px; margin-bottom: 5px; font-size: 13px; padding: 3px; box-sizing: border-box; resize:none;">PICSOS 2000</textarea>
+                    
+                    <div class="ui-grid-2">
+                        <div>
+                            <label>Font Style</label>
+                            <select id="sel_font">
+                                <option value="Arial">Arial (System)</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="'VT323', monospace">Digital (Camcorder)</option>
+                                <option value="'DotGothic16', sans-serif">Dot Gothic (Web)</option>
+                                <option value="'Press Start 2P', cursive">8-Bit Arcade</option>
+                                <option value="'Comic Sans MS', 'Comic Neue'">Comic Sans MS</option>
+                                <option value="'Courier Prime', monospace">Typewriter</option>
+                                <option value="Impact">Impact (Meme)</option>
+                                <option value="'Creepster', cursive">Creepy 90s</option>
+                                <option value="'Permanent Marker', cursive">Marker Font</option>
+                            </select>
+                        </div>
+                        <div><label>Text Color</label><input type="color" id="c_font" value="#ffffff"></div>
+                    </div>
+                    
+                    <div class="ui-grid-2" style="margin-top: 5px;">
+                        <div>
+                            <label>Text Box Frame</label>
+                            <select id="sel_tframe">
+                                <option value="none">None</option>
+                                <option value="solid">Solid Box</option>
+                                <option value="outline">Outline Box</option>
+                                <option value="win98">Win98 Prompt</option>
+                            </select>
+                        </div>
+                        <div><label>Frame Color</label><input type="color" id="c_tframe" value="#000000"></div>
+                    </div>
+
+                    <div class="ui-grid-2" style="margin-top: 5px;">
+                        <div><label>Shadow Color</label><input type="color" id="c_shadow" value="#000000"></div>
+                        <div><label>Shadow Blur</label><div class="slider-row"><input type="range" id="s_sblur" min="0" max="20" value="2"><input type="text" id="s_sblur_txt" readonly></div></div>
+                    </div>
+                    <label>Font Size</label>
+                    <div class="slider-row"><input type="range" id="s_fsize" min="10" max="300" value="48"><input type="text" id="s_fsize_txt" readonly></div>
+                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE TEXT TO IMAGE ]</button>
+                </div>
+
+                <div id="tab-collage" class="tab-content hidden">
+                    <div class="section-title"><span>Grid & Placement Modes</span><button class="btn-reset" onclick="Reset.tabCollage()">↺ Reset</button></div>
+                    <p style="color:#000080; font-weight:bold; font-size:10px; margin: 4px 0;">* FREEFORM: Drag images around. SCROLL WHEEL to scale.</p>
+                    <div class="ui-grid-3 ui-group" id="grp-grid">
+                        <button class="active" data-val="1">Single Mode</button>
+                        <button data-val="free" style="background:#000080; color:#fff; border-color:#fff;">TRUE FREEFORM</button>
+                        <button data-val="photobooth">Photobooth Strip</button>
+                        <button data-val="2h">Split H (1x2)</button>
+                        <button data-val="2v">Split V (2x1)</button>
+                        <button data-val="4">Grid (2x2)</button>
+                        <button data-val="9">Grid (3x3)</button>
+                        <button data-val="3v">Strips (3x1)</button>
+                    </div>
+                    <div class="section-title"><span>Canvas Aspect Ratio</span></div>
+                    <div class="ui-grid-4 ui-group" id="grp-aspect">
+                        <button class="active" data-val="1">1:1</button>
+                        <button data-val="1.33">4:3</button>
+                        <button data-val="1.77">16:9</button>
+                        <button data-val="0.56">9:16</button>
+                    </div>
+                    <div class="ui-grid-2" style="margin-top: 10px;">
+                        <div><label>Matte / Bg Color</label><input type="color" id="c_bg" value="#000000"></div>
+                        <div><label>Inner Padding</label><div class="slider-row"><input type="range" id="s_pad" min="0" max="40" value="4"><input type="text" id="s_pad_txt" readonly></div></div>
+                    </div>
+                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE COLLAGE GEOMETRY ]</button>
+                </div>
+
+                <div id="tab-export" class="tab-content hidden">
+                    <div class="section-title"><span>Destructive Compression</span></div>
+                    <label>JPEG Artifact Level (Quality %)</label>
+                    <div class="slider-row"><input type="range" id="s_jpeg" min="1" max="100" value="100"><input type="text" id="s_jpeg_txt" readonly></div>
+                    <label>Pixelate Block Size</label>
+                    <div class="slider-row"><input type="range" id="s_pix" min="1" max="30" value="1"><input type="text" id="s_pix_txt" readonly></div>
+                    
+                    <div class="section-title"><span>Export Resolution</span></div>
+                    <label>Longest Edge (Pixels)</label>
+                    <div class="slider-row"><input type="range" id="s_res" min="240" max="2000" value="800"><input type="text" id="s_res_txt" readonly></div>
+                    
+                    <button onclick="Engine.download()" style="margin-top: 20px; padding: 14px; font-size: 13px; background: #90ee90; color: #000;">💾 SAVE TO DISK</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const Core = { images: [], activeIdx: -1, history: [] };
+
+        const defaultState = () => ({
+            color: 'none', exp: 0, cont: 0, intensity: 100,
+            shader: 'none', sInt: 100, noise: false, noiseAmt: 40, noiseSize: 1, vignette: false, rgbSplit: 0,
+            frame: 'none', frameTitle: 'TITLE', frameSub: 'Bottom Text', frameFSize: 40, frameBotOn: false, frameFont: 'Arial', frameColor: '#ffffff',
+            stickers: [],
+            textOn: false, textStr: 'PICSOS 2000', fontFam: 'Arial', fontColor: '#ffffff', shadowColor: '#000000', shadowBlur: 2, fSize: 48, tx: 50, ty: 50, tFrame: 'none', tFrameColor: '#000000',
+            grid: '1', aspect: 1, pad: 4, bgColor: '#000000',
+            jpeg: 100, pixelSize: 1, res: 800
+        });
+        
+        let State = defaultState();
+        let fastTimeout = null;
+
+        const canvas = document.getElementById('renderCanvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        const pushHistory = () => {
+            if(Core.history.length > 20) Core.history.shift();
+            Core.history.push(JSON.parse(JSON.stringify(State)));
+        };
+
+        const Reset = {
+            tabColor: () => { pushHistory(); const d = defaultState(); State.color = d.color; State.exp = d.exp; State.cont = d.cont; State.intensity = d.intensity; syncUI(); Engine.run(); },
+            tabFx: () => { pushHistory(); const d = defaultState(); State.shader = d.shader; State.sInt = d.sInt; State.noise = d.noise; State.noiseAmt = d.noiseAmt; State.noiseSize = d.noiseSize; State.vignette = d.vignette; State.rgbSplit = d.rgbSplit; syncUI(); Engine.run(); },
+            tabText: () => { pushHistory(); const d = defaultState(); Object.assign(State, {textOn: d.textOn, textStr: d.textStr, fontFam: d.fontFam, fontColor: d.fontColor, shadowColor: d.shadowColor, shadowBlur: d.shadowBlur, fSize: d.fSize, tx: d.tx, ty: d.ty, tFrame: d.tFrame, tFrameColor: d.tFrameColor}); syncUI(); Engine.run(); },
+            tabFrames: () => { pushHistory(); const d = defaultState(); State.frame = d.frame; State.frameTitle = d.frameTitle; State.frameSub = d.frameSub; State.frameFSize = d.frameFSize; State.frameBotOn = d.frameBotOn; State.frameFont = d.frameFont; State.frameColor = d.frameColor; syncUI(); Engine.run(); },
+            tabStickers: () => { pushHistory(); State.stickers = []; updateStickersUI(); Engine.run(); },
+            tabCollage: () => { pushHistory(); const d = defaultState(); Object.assign(State, {grid: d.grid, aspect: d.aspect, pad: d.pad, bgColor: d.bgColor}); syncUI(); Engine.run(); },
+            bakeFX: () => {
+                if (Core.activeIdx === -1) return;
+                const data = canvas.toDataURL('image/png');
+                const img = new Image();
+                img.onload = () => {
+                    Core.images[Core.activeIdx] = img;
+                    State = defaultState(); 
+                    syncUI(); Engine.run(); updateGallery();
+                };
+                img.src = data;
+            }
+        };
+
+        const syncUI = () => {
+            const setS = (id, val) => { const el = document.getElementById(id); if(el){ el.value = val; document.getElementById(id+'_txt').value = val; } };
+            setS('s_exp', State.exp); setS('s_cont', State.cont); setS('s_int', State.intensity); setS('s_sint', State.sInt); setS('s_rgb', State.rgbSplit); 
+            setS('s_namt', State.noiseAmt); setS('s_nsiz', State.noiseSize);
+            setS('s_jpeg', State.jpeg); setS('s_pix', State.pixelSize); setS('s_res', State.res);
+            setS('s_fsize', State.fSize); setS('s_sblur', State.shadowBlur); setS('s_pad', State.pad); setS('s_frm_size', State.frameFSize);
+
+            const setG = (id, val) => {
+                const grp = document.getElementById(id); if(!grp) return;
+                grp.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                const btn = grp.querySelector(`button[data-val="${val}"]`); if(btn) btn.classList.add('active');
+            };
+            setG('grp-color', State.color); setG('grp-shader', State.shader); setG('grp-frame', State.frame); setG('grp-grid', State.grid); setG('grp-aspect', State.aspect);
+
+            document.getElementById('c_noise').checked = State.noise; document.getElementById('c_vignette').checked = State.vignette; document.getElementById('c_text').checked = State.textOn; document.getElementById('c_frame_bot').checked = State.frameBotOn;
+            document.getElementById('t_str').value = State.textStr; document.getElementById('t_frame_title').value = State.frameTitle; document.getElementById('t_frame_sub').value = State.frameSub; 
+            document.getElementById('c_font').value = State.fontColor; document.getElementById('c_shadow').value = State.shadowColor; document.getElementById('c_bg').value = State.bgColor; document.getElementById('c_ffont').value = State.frameColor;
+            document.getElementById('sel_font').value = State.fontFam; document.getElementById('sel_tframe').value = State.tFrame; document.getElementById('c_tframe').value = State.tFrameColor; document.getElementById('sel_ffont').value = State.frameFont;
+            updateStickersUI();
+        };
+
+        const ClassicMoticons = [':v', ':)', ':(', ':D', 'xD', ':p', '<3', '(y)', '(n)', 'O_o', '-_-', '8)', 'T_T', '^_^', '>:(', ':3', 'x_x', '._.', 'OwO', '☻', '★', '♥', '♪', '☠', '✔', '✘', '✌', '☯', '¯\\_(ツ)_/¯', '( ͡° ͜ʖ ͡°)', 'ʕ•ᴥ•ʔ', '(⌐■_■)', 'ಥ_ಥ', 'UnU', 'UwU', '>_<', ';-;', 'ಠ_ಠ', '(╯°□°）╯︵ ┻━┻', 'ᕙ(⇀‸↼‶)ᕗ', '༼ つ ◕_◕ ༽つ', 'ᶘ ᵒᴥᵒᶅ', '>:V', '7w7', 'TwT', 'ToT', ':c', 'c:', '>:3', 'ewe', '(*^ω^*)', '(◕‿◕✿)', '(^._.^)ﾉ', '(=^･ω･^=)'];
+        const bank = document.getElementById('sticker-bank');
+        ClassicMoticons.forEach(em => {
+            const b = document.createElement('button'); b.innerText = em; b.style.fontSize='14px'; b.style.padding='4px'; b.style.fontFamily='Arial';
+            b.onclick = () => { pushHistory(); State.stickers.push({ id: Date.now(), text: em, x: 50, y: 50, size: 80, rot: 0, color: '#ffffff' }); updateStickersUI(); Engine.run(); };
+            bank.appendChild(b);
+        });
+
+        const ASCIIArts = [
+            " /\\_/\\\n( o.o )\n > ^ <", " (\\_/)\n( •_•)\n/ > ♥", "[SYSTEM\n ERROR]", 
+            "o()==[════=>", " ▄︻̷̿┻̿═━一", "@}--,--'--", "/|\\ ^._.^ /|\\", 
+            "<`(((><", "   |\\__/,|   (`\\\n _.|o o  |_   ) )\n-(((---(((--------", " ||||| \n|o o| \n| L | \n \\=/ ",
+            " \\_/\n(* *) \n \\_/", "  /\\ \n //\\\\ \n///\\\\\\ \n  ||", " ^..^\n(oo)", " \\_\\_ \n(o.o)\n ( )",
+            " ,---.\n( @ @ )\n ).-.( \n'/|||\\`", " \\_v_/\n( . . )\n(  u  )",
+            " /\\_/\\\n=( °w° )=\n )   ( //\n(__ __)//", " (\\_/)\n (^_^) \n(____)0",
+            "  _._     _,-'\"\"`-._\n (,-.`._,'(       |\\`-/|\n     `-.-' \\ )-`( , o o)\n           `-    \\`_`\"'-",
+            " ⣿⣿⣿⣿\n ⣿⣿⣿⣿\n ⣿⣿⣿⣿", " ┏(-\_-)┛\n┗(-\_- )┓"
+        ];
+        const asciiBank = document.getElementById('ascii-bank');
+        ASCIIArts.forEach(asc => {
+            const b = document.createElement('button'); b.innerText = asc; b.style.fontSize='8px'; b.style.padding='2px'; b.style.fontFamily='"Courier Prime", monospace'; b.style.whiteSpace='pre'; b.style.textAlign='left';
+            b.onclick = () => { pushHistory(); State.stickers.push({ id: Date.now(), text: asc, x: 50, y: 50, size: 120, rot: 0, color: '#ffffff' }); updateStickersUI(); Engine.run(); };
+            asciiBank.appendChild(b);
+        });
+
+        const updateStickersUI = () => {
+            const cont = document.getElementById('active-stickers'); cont.innerHTML = '';
+            [...State.stickers].reverse().forEach((stk, revIdx) => {
+                const i = State.stickers.length - 1 - revIdx;
+                const row = document.createElement('div');
+                row.style.display = 'flex'; row.style.gap = '2px'; row.style.alignItems = 'center'; row.style.marginBottom = '2px'; row.style.background = '#e0e0e0'; row.style.padding = '2px';
+                
+                const lbl = document.createElement('div'); lbl.innerText = stk.text.replace(/\n/g, '↵'); lbl.style.fontSize='12px'; lbl.style.width='40px'; lbl.style.textAlign='left'; lbl.style.whiteSpace='nowrap'; lbl.style.overflow='hidden';
+                
+                const sizer = document.createElement('input'); sizer.type = 'range'; sizer.min=10; sizer.max=800; sizer.value=stk.size; sizer.style.width='30px';
+                sizer.oninput = e => { stk.size = e.target.value; Engine.run(true); clearTimeout(fastTimeout); fastTimeout = setTimeout(Engine.run, 200); }; sizer.onchange = () => { pushHistory(); Engine.run(); };
+
+                const rot = document.createElement('input'); rot.type = 'range'; rot.min=-180; rot.max=180; rot.value=stk.rot; rot.style.width='30px';
+                rot.oninput = e => { stk.rot = e.target.value; Engine.run(true); clearTimeout(fastTimeout); fastTimeout = setTimeout(Engine.run, 200); }; rot.onchange = () => { pushHistory(); Engine.run(); };
+
+                const col = document.createElement('input'); col.type = 'color'; col.value = stk.color || '#ffffff'; col.style.width='18px'; col.style.height='18px'; col.style.padding='0';
+                col.oninput = e => { stk.color = e.target.value; Engine.run(true); }; col.onchange = () => { pushHistory(); Engine.run(); };
+
+                const btnUp = document.createElement('button'); btnUp.innerText='▲'; btnUp.className='layer-btn';
+                btnUp.onclick = () => { if(i<State.stickers.length-1){ pushHistory(); [State.stickers[i], State.stickers[i+1]] = [State.stickers[i+1], State.stickers[i]]; updateStickersUI(); Engine.run(); } };
+
+                const btnDn = document.createElement('button'); btnDn.innerText='▼'; btnDn.className='layer-btn';
+                btnDn.onclick = () => { if(i>0){ pushHistory(); [State.stickers[i-1], State.stickers[i]] = [State.stickers[i], State.stickers[i-1]]; updateStickersUI(); Engine.run(); } };
+
+                const btnDel = document.createElement('button'); btnDel.innerText='✖'; btnDel.className='layer-btn'; btnDel.style.color='red';
+                btnDel.onclick = () => { pushHistory(); State.stickers.splice(i, 1); updateStickersUI(); Engine.run(); };
+
+                row.appendChild(lbl); row.appendChild(sizer); row.appendChild(rot); row.appendChild(col); row.appendChild(btnUp); row.appendChild(btnDn); row.appendChild(btnDel);
+                cont.appendChild(row);
+            });
+        };
+
+        const bindUI = () => {
+            const upd = () => Engine.run();
+            const bindS = (id, key, parse) => {
+                const sl = document.getElementById(id); const txt = document.getElementById(id+'_txt');
+                sl.addEventListener('change', pushHistory);
+                sl.addEventListener('input', e => { txt.value = e.target.value; State[key] = parse(e.target.value); upd(); });
+            };
+            
+            ['s_exp','s_cont','s_int','s_sint','s_rgb','s_namt','s_nsiz','s_jpeg','s_pix','s_res','s_fsize','s_sblur','s_pad','s_frm_size'].forEach(id => {
+                let key = id.replace('s_','');
+                if(key==='pix') key='pixelSize'; if(key==='int') key='intensity'; if(key==='sint') key='sInt';
+                if(key==='namt') key='noiseAmt'; if(key==='nsiz') key='noiseSize'; if(key==='frm_size') key='frameFSize';
+                if(key==='sblur') key='shadowBlur'; if(key==='fsize') key='fSize'; 
+                bindS(id, key, parseFloat);
+            });
+
+            const bindG = (id, key, p = x => x) => {
+                const grp = document.getElementById(id);
+                grp.querySelectorAll('button').forEach(b => {
+                    b.addEventListener('click', e => { pushHistory(); grp.querySelectorAll('button').forEach(btn => btn.classList.remove('active')); e.target.classList.add('active'); State[key] = p(e.target.dataset.val); upd(); });
+                });
+            };
+            bindG('grp-color', 'color'); bindG('grp-shader', 'shader'); bindG('grp-frame', 'frame'); bindG('grp-grid', 'grid'); bindG('grp-aspect', 'aspect', parseFloat);
+
+            ['c_noise', 'c_vignette', 'c_text', 'c_frame_bot'].forEach(id => { 
+                document.getElementById(id).addEventListener('change', e => { pushHistory(); State[id.replace('c_','').replace('text','textOn').replace('frame_bot','frameBotOn')] = e.target.checked; upd(); }); 
+            });
+            
+            const bindTxt = (id, key) => { 
+                const el = document.getElementById(id); 
+                el.addEventListener('input', e => { State[key] = e.target.value; upd(); }); el.addEventListener('change', pushHistory); 
+            };
+            bindTxt('t_str', 'textStr'); bindTxt('t_frame_title', 'frameTitle'); bindTxt('t_frame_sub', 'frameSub');
+            bindTxt('c_font', 'fontColor'); bindTxt('c_shadow', 'shadowColor'); bindTxt('c_bg', 'bgColor'); 
+            bindTxt('sel_font', 'fontFam'); bindTxt('sel_tframe', 'tFrame'); bindTxt('c_tframe', 'tFrameColor');
+            bindTxt('sel_ffont', 'frameFont'); bindTxt('c_ffont', 'frameColor');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+                    e.target.classList.add('active'); document.getElementById(e.target.dataset.target).classList.remove('hidden');
+                });
+            });
+
+            const handleFiles = (files) => {
+                Array.from(files).forEach(f => {
+                    if(!f.type.startsWith('image/')) return;
+                    const r = new FileReader(); r.onload = ev => { const img = new Image(); img.onload = () => { Core.images.push(img); if (Core.activeIdx === -1) Core.activeIdx = 0; updateGallery(); pushHistory(); Engine.run(); }; img.src = ev.target.result; }; r.readAsDataURL(f);
+                });
+            };
+
+            document.getElementById('fileIn').addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
+            const cArea = document.getElementById('canvasContainer');
+            cArea.addEventListener('dragover', e => { e.preventDefault(); });
+            cArea.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files && e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files); });
+        };
+
+        const updateGallery = () => {
+            const gal = document.getElementById('gallery'); gal.innerHTML = '';
+            Core.images.forEach((img, i) => {
+                const wrap = document.createElement('div'); wrap.className = `thumb ${i === Core.activeIdx ? 'active' : ''}`;
+                wrap.onclick = () => { Core.activeIdx = i; updateGallery(); pushHistory(); Engine.run(); };
+                const elImg = document.createElement('img'); elImg.src = img.src;
+                
+                const btnLeft = document.createElement('button'); btnLeft.className = 'btn-gal btn-left'; btnLeft.innerText = '◀';
+                btnLeft.onclick = (e) => { e.stopPropagation(); if(i>0){ let t=Core.images[i]; Core.images[i]=Core.images[i-1]; Core.images[i-1]=t; Core.activeIdx=i-1; updateGallery(); pushHistory(); Engine.run(); } };
+                
+                const btnRight = document.createElement('button'); btnRight.className = 'btn-gal btn-right'; btnRight.innerText = '▶';
+                btnRight.onclick = (e) => { e.stopPropagation(); if(i<Core.images.length-1){ let t=Core.images[i]; Core.images[i]=Core.images[i+1]; Core.images[i+1]=t; Core.activeIdx=i+1; updateGallery(); pushHistory(); Engine.run(); } };
+                
+                const btnX = document.createElement('button'); btnX.className = 'btn-gal btn-del'; btnX.innerText = 'X';
+                btnX.onclick = (e) => { e.stopPropagation(); Core.images.splice(i, 1); Core.activeIdx = Core.images.length > 0 ? 0 : -1; updateGallery(); pushHistory(); Engine.run(); };
+                
+                wrap.appendChild(elImg); wrap.appendChild(btnLeft); wrap.appendChild(btnRight); wrap.appendChild(btnX); gal.appendChild(wrap);
+            });
+        };
+
+        let dragInfo = { active: false, target: null };
+        canvas.addEventListener('mousedown', e => {
+            if(Core.activeIdx === -1) return;
+            const rect = canvas.getBoundingClientRect();
+            const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * sx, my = (e.clientY - rect.top) * sy;
+
+            for(let i = State.stickers.length - 1; i >= 0; i--) {
+                const stk = State.stickers[i];
+                const tx = (canvas.width * stk.x) / 100, ty = (canvas.height * stk.y) / 100;
+                const sizePx = Math.floor((canvas.height * stk.size) / 500);
+                if(Math.hypot(mx - tx, my - ty) < sizePx) { dragInfo = { active: true, target: 'sticker', index: i }; return; }
+            }
+
+            if(State.textOn && State.textStr) {
+                const tx = (canvas.width * State.tx) / 100, ty = (canvas.height * State.ty) / 100;
+                ctx.font = `${State.fSize}px ${State.fontFam}`; 
+                const lines = State.textStr.split('\n');
+                let hit = false;
+                lines.forEach((line, idx) => {
+                    const metrics = ctx.measureText(line);
+                    const lTy = ty + (idx * State.fSize);
+                    if(Math.abs(mx - tx) < metrics.width/2 && my > lTy - State.fSize && my < lTy + State.fSize*0.3) hit = true;
+                });
+                if(hit) { dragInfo = { active: true, target: 'text' }; return; }
+            }
+
+            if(State.grid === 'free') {
+                for(let i = Core.images.length - 1; i >= 0; i--) {
+                    const img = Core.images[i]; if(!img.ft) continue;
+                    const iw = (canvas.height * 0.4) * img.ft.s * (img.width/img.height), ih = canvas.height * 0.4 * img.ft.s;
+                    if(Math.abs(mx - img.ft.x) < iw/2 && Math.abs(my - img.ft.y) < ih/2) {
+                        Core.images.splice(i, 1); Core.images.push(img); dragInfo = { active: true, target: Core.images.length - 1 }; return;
+                    }
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            if(!dragInfo.active) return;
+            document.getElementById('dragTooltip').style.display = 'block';
+            const rect = canvas.getBoundingClientRect();
+            const mx = (e.clientX - rect.left) * (canvas.width / rect.width), my = (e.clientY - rect.top) * (canvas.height / rect.height);
+            
+            if(dragInfo.target === 'sticker') {
+                State.stickers[dragInfo.index].x = (mx / canvas.width) * 100; State.stickers[dragInfo.index].y = (my / canvas.height) * 100;
+            } else if(dragInfo.target === 'text') {
+                State.tx = Math.min(100, Math.max(0, (mx / canvas.width) * 100)); State.ty = Math.min(100, Math.max(0, (my / canvas.height) * 100));
+            } else if(typeof dragInfo.target === 'number') {
+                Core.images[dragInfo.target].ft.x = mx; Core.images[dragInfo.target].ft.y = my;
+            }
+            Engine.run(true); 
+        });
+
+        canvas.addEventListener('wheel', e => {
+            if(!dragInfo.active) return;
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 1.05 : 0.95;
+            
+            if(dragInfo.target === 'sticker') {
+                State.stickers[dragInfo.index].size *= delta; updateStickersUI();
+            } else if(typeof dragInfo.target === 'number') {
+                Core.images[dragInfo.target].ft.s *= delta;
+            } else if(dragInfo.target === 'text') {
+                State.fSize *= delta;
+                document.getElementById('s_fsize').value = State.fSize;
+                document.getElementById('s_fsize_txt').value = Math.round(State.fSize);
+            }
+            Engine.run(true);
+        }, { passive: false });
+
+        const stopDrag = () => { if(dragInfo.active){ dragInfo.active = false; document.getElementById('dragTooltip').style.display = 'none'; pushHistory(); Engine.run(); } };
+        canvas.addEventListener('mouseup', stopDrag); canvas.addEventListener('mouseleave', stopDrag);
+
+        const Engine = {
+            undo: () => { if(Core.history.length > 0) { State = Core.history.pop(); syncUI(); Engine.run(); } },
+
+            run: (fastMode = false) => {
+                const eTxt = document.getElementById('emptyText');
+                if (Core.activeIdx === -1 || !Core.images[Core.activeIdx]) { canvas.classList.add('hidden'); eTxt.style.display = 'block'; return; }
+                canvas.classList.remove('hidden'); eTxt.style.display = 'none';
+
+                let w = State.res, h = State.res;
+                if (State.grid === '1' || State.grid === 'free' || State.grid === 'photobooth') {
+                    const ratio = Core.images[Core.activeIdx].width / Core.images[Core.activeIdx].height;
+                    if (ratio > 1) h = Math.round(State.res / ratio); else w = Math.round(State.res * ratio);
+                } else h = Math.round(State.res / State.aspect);
+
+                const buf = document.createElement('canvas'); buf.width = w; buf.height = h;
+                const bCtx = buf.getContext('2d', { willReadFrequently: true });
+                bCtx.fillStyle = State.bgColor; bCtx.fillRect(0, 0, w, h);
+
+                Engine.drawCollageGrid(bCtx, w, h);
+
+                if(!fastMode && (State.color !== 'none' || State.shader !== 'none' || State.exp !== 0 || State.cont !== 0 || State.noise || State.vignette || State.rgbSplit > 0)) {
+                    let idata = bCtx.getImageData(0, 0, w, h); Engine.computeShaders(idata, w, h); bCtx.putImageData(idata, 0, 0);
+                }
+
+                if(fastMode) {
+                    canvas.width = w; canvas.height = h; ctx.imageSmoothingEnabled = true; ctx.drawImage(buf, 0, 0); Engine.drawOverlays(ctx, w, h); return;
+                }
+
+                const cmp = new Image();
+                cmp.onload = () => {
+                    if (State.pixelSize > 1) { canvas.width = Math.max(1, Math.floor(w/State.pixelSize)); canvas.height = Math.max(1, Math.floor(h/State.pixelSize)); ctx.imageSmoothingEnabled = false; } 
+                    else { canvas.width = w; canvas.height = h; ctx.imageSmoothingEnabled = true; }
+                    ctx.drawImage(cmp, 0, 0, canvas.width, canvas.height);
+                    
+                    const fBuf = document.createElement('canvas'); fBuf.width = w; fBuf.height = h; const fCtx = fBuf.getContext('2d');
+                    fCtx.imageSmoothingEnabled = (State.pixelSize === 1); fCtx.drawImage(canvas, 0, 0, w, h);
+                    Engine.drawOverlays(fCtx, w, h); canvas.width = w; canvas.height = h; ctx.drawImage(fBuf, 0, 0);
+                };
+                cmp.src = buf.toDataURL('image/jpeg', State.jpeg / 100);
+            },
+
+            drawCollageGrid: (ctx, w, h) => {
+                const drawC = (img, x, y, cw, ch) => {
+                    if (!img) return; const rI = img.width/img.height, rC = cw/ch; let sx = 0, sy = 0, sw = img.width, sh = img.height;
+                    if (rI > rC) { sw = img.height * rC; sx = (img.width - sw)/2; } else { sh = img.width / rC; sy = (img.height - sh)/2; }
+                    ctx.drawImage(img, sx, sy, sw, sh, x, y, cw, ch);
+                };
+                const imgs = Core.images, p = State.pad, active = imgs[Core.activeIdx];
+                const getI = (i) => imgs[i] || active;
+
+                if (State.grid === '1') drawC(active, 0, 0, w, h);
+                else if (State.grid === 'free') {
+                    imgs.forEach(img => {
+                        if(!img.ft) img.ft = { x: w/2 + (Math.random()*40-20), y: h/2 + (Math.random()*40-20), r: 0, s: 1 };
+                        ctx.save(); ctx.translate(img.ft.x, img.ft.y); ctx.rotate(img.ft.r);
+                        const ih = h*0.4 * img.ft.s, iw = ih * (img.width/img.height);
+                        ctx.drawImage(img, -iw/2, -ih/2, iw, ih); ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.strokeRect(-iw/2, -ih/2, iw, ih); ctx.restore();
+                    });
+                }
+                else if (State.grid === 'photobooth') {
+                    const n = Math.max(1, imgs.length);
+                    const ch = (h - p * (n + 1)) / n;
+                    const cw = w - p * 2;
+                    for(let i=0; i<n; i++) drawC(getI(i), p, p + i*(ch+p), cw, ch);
+                }
+                else if (State.grid === '2h') { const cw = (w-p*3)/2, ch = h-p*2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p*2+cw, p, cw, ch); } 
+                else if (State.grid === '2v') { const cw = w-p*2, ch = (h-p*3)/2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p, p*2+ch, cw, ch); } 
+                else if (State.grid === '4') { const cw = (w-p*3)/2, ch = (h-p*3)/2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p*2+cw, p, cw, ch); drawC(getI(2), p, p*2+ch, cw, ch); drawC(getI(3), p*2+cw, p*2+ch, cw, ch); } 
+                else if (State.grid === '3v') { const cw = (w-p*4)/3, ch = h-p*2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p*2+cw, p, cw, ch); drawC(getI(2), p*3+cw*2, p, cw, ch); } 
+                else if (State.grid === '9') { const cw = (w-p*4)/3, ch = (h-p*4)/3; for(let r=0;r<3;r++){ for(let c=0;c<3;c++){ drawC(getI(r*3+c), p+c*(cw+p), p+r*(ch+p), cw, ch); } } } 
+                else if (State.grid === 'picnic') {
+                    for(let i=0; i<Math.max(4, imgs.length); i++) {
+                        ctx.save(); ctx.translate(w/2 + (Math.sin(i*2)*w*0.25), h/2 + (Math.cos(i*2)*h*0.25)); ctx.rotate((i - 2)*0.15);
+                        const ih = h*0.4, iw = ih * (getI(i).width/getI(i).height);
+                        ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowBlur=12; ctx.drawImage(getI(i), -iw/2, -ih/2, iw, ih); 
+                        ctx.strokeStyle='#fff'; ctx.lineWidth=p; ctx.strokeRect(-iw/2, -ih/2, iw, ih); ctx.restore();
+                    }
+                }
+            },
+
+            computeShaders: (imgData, w, h) => {
+                const d = imgData.data; const src = new Uint8ClampedArray(d);
+                const exp = (255 * (State.exp / 100)), cont = (259 * (State.cont + 255)) / (255 * (259 - State.cont));
+                const rgbShift = State.rgbSplit * 4, intFactor = State.intensity / 100, sIntFactor = State.sInt / 100;
+
+                let noiseBuf = null, ns = Math.max(1, State.noiseSize);
+                if (State.noise) {
+                    const bw = Math.ceil(w/ns), bh = Math.ceil(h/ns);
+                    noiseBuf = new Int32Array(bw * bh);
+                    for(let i=0; i<noiseBuf.length; i++) noiseBuf[i] = (Math.random()-0.5) * State.noiseAmt * 2.5;
+                }
+
+                for (let i = 0; i < d.length; i += 4) {
+                    let r = d[i], g = d[i+1], b = d[i+2]; 
+                    
+                    r = cont*(r-128)+128+exp; g = cont*(g-128)+128+exp; b = cont*(b-128)+128+exp;
+                    let rb=r, gb=g, bb=b;
+
+                    if (State.color === 'bw') { let l=r*0.3+g*0.59+b*0.11; r=g=b=l; } 
+                    else if (State.color === 'sepia') { let tr=r*0.393+g*0.769+b*0.189, tg=r*0.349+g*0.686+b*0.168, tb=r*0.272+g*0.534+b*0.131; r=tr; g=tg; b=tb; }
+                    else if (State.color === 'cold') { r*=0.8; g*=1.1; b*=1.3; } 
+                    else if (State.color === 'warm') { r*=1.2; g*=1.05; b*=0.8; }
+                    else if (State.color === 'kodak') { r*=1.1; g*=0.95; b*=0.85; }
+                    else if (State.color === 'fuji') { r*=0.9; g*=1.1; b*=1.05; }
+                    else if (State.color === 'polaroid') { r=Math.min(255, r*1.1+20); g=Math.min(255, g*1.05+10); b*=0.9; }
+                    else if (State.color === 'highsat') { let l=r*0.3+g*0.59+b*0.11; r=l+(r-l)*1.5; g=l+(g-l)*1.5; b=l+(b-l)*1.5; }
+                    else if (State.color === 'muted') { let l=r*0.3+g*0.59+b*0.11; r=l+(r-l)*0.5; g=l+(g-l)*0.5; b=l+(b-l)*0.5; }
+                    else if (State.color === 'dark') { r*=0.7; g*=0.7; b*=0.7; }
+                    else if (State.color === 'light') { r=Math.min(255, r*1.3); g=Math.min(255, g*1.3); b=Math.min(255, b*1.3); }
+                    else if (State.color === 'redtint') { r=Math.min(255, r*1.3); g*=0.8; b*=0.8; }
+                    else if (State.color === 'greentint') { r*=0.8; g=Math.min(255, g*1.3); b*=0.8; }
+                    else if (State.color === 'bluetint') { r*=0.8; g*=0.8; b=Math.min(255, b*1.3); }
+
+                    r = rb + (r - rb)*intFactor; g = gb + (g - gb)*intFactor; b = bb + (b - bb)*intFactor;
+                    let rb_s=r, gb_s=g, bb_s=b;
+
+                    let y = Math.floor((i / 4) / w), x = (i / 4) % w;
+                    if(State.shader === 'glitch') { if(Math.random()>0.995){ let sx = (x+Math.floor(Math.random()*50))%w; let idx = (y*w+sx)*4; r=src[idx];g=src[idx+1];b=src[idx+2]; } }
+                    else if(State.shader === 'ripple') { let sx = Math.floor(x + Math.sin(y/10)*10); if(sx>=0 && sx<w){ let idx = (y*w+sx)*4; r=src[idx];g=src[idx+1];b=src[idx+2]; } }
+                    else if(State.shader === 'emboss') { if(i>4 && y>0){ let pr = src[i-w*4-4]; r = 128 + (r-pr)*2; g=b=r; } }
+                    else if(State.shader === 'edge') { if(i>4){ let pr=src[i-4], pg=src[i-3], pb=src[i-2]; let diff = Math.abs(r-pr)+Math.abs(g-pg)+Math.abs(b-pb); r=g=b=diff*2; } }
+                    else if (State.shader === 'gameboy') { let l=r*0.3+g*0.59+b*0.11; if(l<64){r=15;g=56;b=15;} else if(l<128){r=48;g=98;b=48;} else if(l<192){r=139;g=172;b=15;} else{r=155;g=188;b=15;} if((x+y)%2===0){r*=0.9;g*=0.9;b*=0.9;} }
+                    else if (State.shader === 'frutiger') { r*=0.8; g=Math.min(255, g*1.3+40); b=Math.min(255, b*1.4+50); if(y%4===0){r+=10;g+=10;b+=10;} }
+                    else if (State.shader === 'analog') { let l=r*0.3+g*0.59+b*0.11; r=Math.min(255, l*1.5+40); g=l*0.7; b=l*0.7; if(y%2===0){r*=0.9;g*=0.9;b*=0.9;} if(Math.random()>0.9){r=Math.min(255,r+50);} }
+                    else if (State.shader === 'liminal') { let l=r*0.3+g*0.59+b*0.11; r=r*0.7+l*0.3+30; g=g*0.7+l*0.3+30; b=b*0.5+l*0.2; }
+                    else if (State.shader === 'retrotv') { r*=0.9; g=Math.min(255, g*1.1); b=Math.min(255, b*1.2); if(y%3===0) { r*=0.8; g*=0.8; b*=0.8; } }
+                    else if (State.shader === 'crt') { if (y%3===0){r*=0.7;g*=0.7;b*=0.7;} r*=1.1; b*=1.1; }
+                    else if (State.shader === 'vhs') { if (y%4===0){r-=25;g-=25;b-=25;} }
+                    else if (State.shader === 'halftone') { if ((x+y)%4===0){r-=50;g-=50;b-=50;} }
+                    else if (State.shader === 'matrix') { let l=r*0.3+g*0.59+b*0.11; r=0; g=Math.min(255, l*1.5); b=0; if(y%2===0)g*=0.8; }
+                    else if (State.shader === 'night') { let l=r*0.3+g*0.59+b*0.11; r=0; g=Math.min(255, l*1.5+20); b=0; }
+                    else if (State.shader === 'thermal') { let l=r*0.3+g*0.59+b*0.11; if(l<85){r=0;g=0;b=l*3;} else if(l<170){r=(l-85)*3;g=0;b=255-(l-85)*3;} else {r=255;g=(l-170)*3;b=0;} }
+                    else if (State.shader === 'nokia') { r=(r&0b11000000); g=Math.min(255, (g&0b11100000)+60); b=(b&0b11000000); }
+                    else if (State.shader === 'cga') { let l=r*0.3+g*0.59+b*0.11; if(l<64){r=g=b=0;} else if(l<128){r=0;g=170;b=170;} else if(l<192){r=170;g=0;b=170;} else{r=g=b=255;} }
+                    else if (State.shader === 'invert') { r=255-r; g=255-g; b=255-b; }
+                    else if (State.shader === 'ascii') { let l=Math.round((r*0.3+g*0.59+b*0.11)/32)*32; r=g=b=l; if((x%4===0)||(y%4===0)){r=g=b=0;} }
+
+                    r = rb_s + (r - rb_s)*sIntFactor; g = gb_s + (g - gb_s)*sIntFactor; b = bb_s + (b - bb_s)*sIntFactor;
+
+                    if (State.noise) {
+                        const nx = Math.floor(x/ns), ny = Math.floor(y/ns);
+                        const n = noiseBuf[ny * Math.ceil(w/ns) + nx];
+                        r+=n; g+=n; b+=n; 
+                    }
+                    d[i]=r; d[i+1]=g; d[i+2]=b;
+                }
+
+                if (rgbShift > 0) { for (let i = d.length - 1; i >= rgbShift; i -= 4) d[i - 3] = d[i - 3 - rgbShift]; }
+                if (State.vignette) {
+                    const cx = w/2, cy = h/2, maxDist = Math.sqrt(cx*cx + cy*cy);
+                    for (let y = 0; y < h; y++) {
+                        for (let x = 0; x < w; x++) {
+                            const mult = 1 - Math.pow(Math.sqrt(Math.pow(x-cx, 2) + Math.pow(y-cy, 2)) / maxDist, 2.5) * 0.9;
+                            const idx = (y * w + x) * 4; d[idx]*=mult; d[idx+1]*=mult; d[idx+2]*=mult;
+                        }
+                    }
+                }
+            },
+
+            drawOverlays: (ctx, w, h) => {
+                const s = State.frame;
+                const fSize = State.frameFSize;
+                const fTitle = State.frameTitle;
+                const fSub = State.frameSub;
+                const fc = State.frameColor;
+                const ff = State.frameFont;
+                
+                State.stickers.forEach(stk => {
+                    ctx.save();
+                    ctx.translate((w * stk.x) / 100, (h * stk.y) / 100); ctx.rotate(stk.rot * Math.PI / 180);
+                    const sSize = Math.floor((h * stk.size) / 500);
+                    ctx.font = `${sSize}px "Courier Prime", monospace`; 
+                    ctx.fillStyle = stk.color || '#ffffff';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    const lines = stk.text.split('\n');
+                    const startY = -((lines.length - 1) * sSize) / 2;
+                    lines.forEach((line, idx) => { ctx.fillText(line, 0, startY + (idx * sSize)); });
+                    ctx.restore();
+                });
+                
+                const drawBottomText = (yPos = h - 10, overColor = fc, font = `bold ${fSize}px ${ff}`, stroke = '#000') => {
+                    if(!State.frameBotOn || !fSub) return;
+                    ctx.font = font; ctx.fillStyle = overColor; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+                    if(stroke !== 'none') { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(2, fSize*0.1); ctx.strokeText(fSub, w/2, yPos); }
+                    ctx.fillText(fSub, w/2, yPos);
+                    ctx.textBaseline = 'alphabetic';
+                };
+
+                if (s === 'none') { drawBottomText(h - 10, fc, `bold ${fSize}px ${ff}`); }
+                else if (s === 'polaroid') { const p = Math.floor(w * 0.06); ctx.fillStyle = '#f9f9f9'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - (p * 4), w, p * 4); ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 3; ctx.strokeRect(p, p, w - p*2, h - p*5); 
+                    if(fTitle){ ctx.font=`bold ${fSize}px ${ff}`; ctx.fillStyle=fc; ctx.textAlign='center'; ctx.fillText(fTitle, w/2, h - p*2.5); }
+                    drawBottomText(h - p*0.5, fc, `bold ${Math.floor(fSize*0.8)}px ${ff}`, 'none');
+                } 
+                else if (s === 'desmotiva') { 
+                    const bH = Math.floor(h * 0.25); const p = Math.floor(w * 0.03); 
+                    ctx.fillStyle = '#000'; ctx.fillRect(0, h - bH, w, bH); ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h);
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(p-2, p-2, w - p*2 + 4, h - bH - p + 4);
+                    ctx.fillStyle = fc; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    if(fTitle) { ctx.font = `normal ${fSize}px ${ff}`; ctx.fillText(fTitle, w/2, h - bH * 0.6); }
+                    ctx.textBaseline = 'alphabetic';
+                    drawBottomText(h - bH * 0.2, fc, `normal ${Math.floor(fSize * 0.6)}px ${ff}`, 'none');
+                }
+                else if (s === 'meme') {
+                    ctx.textAlign = 'center'; ctx.font = `bold ${fSize*1.5}px ${ff}`; ctx.fillStyle = fc; ctx.strokeStyle = '#000'; ctx.lineWidth = Math.max(2, Math.floor(fSize * 0.1));
+                    if (fTitle) { ctx.textBaseline = 'top'; ctx.strokeText(fTitle.toUpperCase(), w/2, 10); ctx.fillText(fTitle.toUpperCase(), w/2, 10); }
+                    ctx.textBaseline = 'alphabetic';
+                    drawBottomText(h - 10, fc, `bold ${fSize*1.5}px ${ff}`);
+                }
+                else if (s === 'film') { const b = Math.floor(h * 0.12); ctx.fillStyle = '#020202'; ctx.fillRect(0, 0, w, b); ctx.fillRect(0, h - b, w, b); 
+                    if(fTitle){ ctx.font=`bold ${fSize}px ${ff}`; ctx.fillStyle=fc; ctx.textAlign='right'; ctx.fillText(fTitle, w-20, h - b/2 + 5); }
+                    drawBottomText(h - 10, fc, `bold ${fSize}px ${ff}`, 'none');
+                }
+                else if (s === 'cctv') { ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(w/3, 0); ctx.lineTo(w/3, h); ctx.moveTo(w*2/3, 0); ctx.lineTo(w*2/3, h); ctx.moveTo(0, h/3); ctx.lineTo(w, h/3); ctx.moveTo(0, h*2/3); ctx.lineTo(w, h*2/3); ctx.stroke(); 
+                    if(fTitle){ ctx.font=`bold ${fSize}px ${ff}`; ctx.fillStyle=fc; ctx.textAlign='left'; ctx.fillText('CAM 01: ' + fTitle, 20, fSize+10); }
+                    drawBottomText(h - 20, fc, `bold ${fSize}px ${ff}`, 'none');
+                }
+                else if (s === 'magazine') { const m = Math.floor(w * 0.04); ctx.strokeStyle = '#fff'; ctx.lineWidth = m; ctx.strokeRect(m/2, m/2, w-m, h-m); ctx.strokeStyle = 'red'; ctx.lineWidth = 4; ctx.strokeRect(m+4, m+4, w-m*2-8, h-m*2-8); 
+                    if(fTitle){ ctx.font=`bold ${fSize*1.5}px ${ff}`; ctx.fillStyle=fc; ctx.textAlign='left'; ctx.shadowColor='#000'; ctx.shadowBlur=5; ctx.fillText(fTitle, m+15, m+fSize*1.5); ctx.shadowColor='transparent'; }
+                    drawBottomText(h - m - 10, fc, `bold ${fSize}px ${ff}`);
+                }
+                else if (s === 'camcorder') { ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(w/2 - 20, h/2); ctx.lineTo(w/2 + 20, h/2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(w/2, h/2 - 20); ctx.lineTo(w/2, h/2 + 20); ctx.stroke(); ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(30, 30, 8, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.font = 'bold 20px Arial'; ctx.fillText('REC', 45, 37); 
+                    if(fTitle){ ctx.font=`bold ${fSize}px ${ff}`; ctx.fillStyle=fc; ctx.textAlign='right'; ctx.fillText(fTitle, w-20, h-20); }
+                    drawBottomText(h - 20, fc, `bold ${fSize}px ${ff}`, 'none');
+                }
+                else if (s === 'win98') { ctx.fillStyle = '#c0c0c0'; ctx.fillRect(0, 0, w, 24); ctx.fillStyle = '#000080'; ctx.fillRect(2, 2, w-4, 20); ctx.fillStyle = 'white'; ctx.font = 'bold 14px Tahoma'; ctx.textAlign='left'; ctx.fillText(fTitle || 'Image.jpg', 6, 17); ctx.strokeStyle = '#dfdfdf'; ctx.lineWidth = 2; ctx.strokeRect(1, 1, w-2, h-2); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
+                else if (s === 'macos') { ctx.fillStyle = '#e0e0e0'; ctx.fillRect(0, 0, w, 24); ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, w, h); for(let i=4; i<20; i+=2) { ctx.beginPath(); ctx.moveTo(10, i); ctx.lineTo(w-10, i); ctx.stroke(); } ctx.fillStyle = '#e0e0e0'; ctx.fillRect(w/2 - 50, 2, 100, 20); ctx.fillStyle = 'black'; ctx.font = '12px Arial'; ctx.textAlign = 'center'; ctx.fillText(fTitle || 'Picture 1', w/2, 17); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
+                else if (s === 'tv') { ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); const r = Math.min(w,h)*0.1; const pad = Math.min(w,h)*0.05; ctx.moveTo(pad+r, pad); ctx.lineTo(w-pad-r, pad); ctx.quadraticCurveTo(w-pad, pad, w-pad, pad+r); ctx.lineTo(w-pad, h-pad-r); ctx.quadraticCurveTo(w-pad, h-pad, w-pad-r, h-pad); ctx.lineTo(pad+r, h-pad); ctx.quadraticCurveTo(pad, h-pad, pad, h-pad-r); ctx.lineTo(pad, pad+r); ctx.quadraticCurveTo(pad, pad, pad+r, pad); ctx.closePath(); ctx.fill("evenodd"); drawBottomText(h - pad - 10, fc, `bold ${fSize}px ${ff}`, 'none'); }
+                else if (s === 'browser') { ctx.fillStyle = '#dfdfdf'; ctx.fillRect(0,0,w,40); ctx.fillStyle='#000080'; ctx.fillRect(0,0,w,18); ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.textAlign='left'; ctx.fillText('Microsoft Internet Explorer', 5, 12); ctx.fillStyle='#fff'; ctx.fillRect(5, 22, w-10, 14); ctx.fillStyle='#000'; ctx.fillText(fTitle || 'http://www.picsos.com', 8, 33); ctx.strokeStyle='#808080'; ctx.strokeRect(5,22,w-10,14); ctx.strokeRect(0,0,w,h); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
+                else if (s === 'viewmaster') { ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.arc(w/2, h/2, Math.min(w,h)*0.48, 0, Math.PI*2, true); ctx.closePath(); ctx.fill("evenodd"); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
+                else if (s === 'desktop') { ctx.fillStyle = '#008080'; ctx.fillRect(0,0,w,h); const bw=w*0.8, bh=h*0.8; ctx.drawImage(canvas, (w-bw)/2, (h-bh)/2, bw, bh); ctx.fillStyle='#c0c0c0'; ctx.fillRect(0,h-30,w,30); ctx.fillStyle='#dfdfdf'; ctx.fillRect(2,h-28,60,26); ctx.fillStyle='#000'; ctx.font='bold 12px Arial'; ctx.textAlign='center'; ctx.fillText('Start', 32, h-10); drawBottomText(h-40, fc, `bold ${fSize}px ${ff}`); }
+                else if (s === 'vhs_hud') { ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='left'; ctx.fillText('PLAY ►', 20, fSize+10); ctx.fillText('SP', 20, fSize*2+10); if(fTitle){ ctx.textAlign='right'; ctx.fillStyle=fc; ctx.fillText(fTitle, w-20, 40); } drawBottomText(h - 30, fc, `bold ${fSize}px ${ff}`, 'none'); }
+                else if (s === 'gb_border') { const p = Math.floor(w*0.05); ctx.fillStyle='#5b5c5e'; ctx.fillRect(0,0,w,p); ctx.fillRect(0,0,p,h); ctx.fillRect(w-p,0,p,h); ctx.fillRect(0,h-p,w,p); ctx.fillStyle=fc; ctx.font=`italic bold ${Math.floor(p*0.5)}px ${ff}`; ctx.textAlign='center'; ctx.fillText(fTitle || 'DOT MATRIX WITH STEREO SOUND', w/2, p*0.7); drawBottomText(h - p*0.3, fc, `italic bold ${Math.floor(p*0.5)}px ${ff}`, 'none'); }
+                else if (s === 'cyber') { ctx.strokeStyle='#0ff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(w/2, h/2, Math.min(w,h)*0.3, 0, Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(w/2-20, h/2); ctx.lineTo(w/2+20, h/2); ctx.moveTo(w/2, h/2-20); ctx.lineTo(w/2, h/2+20); ctx.stroke(); if(fTitle){ ctx.fillStyle=fc; ctx.font=`${fSize*0.5}px Courier`; ctx.textAlign='left'; ctx.fillText('TARGET: '+fTitle, 20, 30); ctx.fillText('SYS.ON', 20, 45); } drawBottomText(h - 20, fc, `bold ${fSize*0.8}px Courier`, 'none'); }
+                else if (s === 'warning') { const p = Math.floor(h*0.1); ctx.fillStyle='#ffd700'; ctx.fillRect(0,h-p,w,p); ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='center'; ctx.fillText('! WARNING: ' + (fTitle || 'RESTRICTED AREA'), w/2, h-p*0.3); drawBottomText(h - p - 10, fc, `bold ${fSize}px ${ff}`, 'none'); }
+                else if (s === 'wanted') { const p = Math.floor(w * 0.08); ctx.fillStyle = '#d4c3a3'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*1.5, w, p*1.5); ctx.strokeStyle = '#4a2f1d'; ctx.lineWidth = 4; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle=fc; ctx.font=`bold ${fSize*1.5}px ${ff}`; ctx.textAlign='center'; ctx.fillText('WANTED', w/2, p*0.8); ctx.font=`bold ${fSize*0.8}px ${ff}`; ctx.fillText(fTitle || 'REWARD: $5,000', w/2, h - p*0.5); drawBottomText(h - p*0.1, fc, `bold ${fSize*0.5}px ${ff}`, 'none'); }
+                else if (s === 'love') { const p = Math.floor(w * 0.05); ctx.strokeStyle = '#ff69b4'; ctx.lineWidth = p; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle=fc; ctx.font=`bold ${fSize*1.2}px ${ff}`; ctx.textAlign='center'; ctx.fillText('♥♥♥ ' + (fTitle || 'BFFs') + ' ♥♥♥', w/2, p*1.5); drawBottomText(h - p*0.2, fc, `bold ${fSize}px ${ff}`); }
+                else if (s === 'myspace') { const p = Math.floor(w * 0.05); ctx.fillStyle = '#003399'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*2, w, p*2); ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='center'; ctx.fillText(fTitle || "Tom's Space", w/2, p*0.8); drawBottomText(h - p*0.5, fc, `normal ${Math.floor(fSize*0.8)}px ${ff}`, 'none'); }
+                else if (s === 'gothic') { const p = Math.floor(w * 0.06); ctx.fillStyle = '#111'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*2, w, p*2); ctx.strokeStyle = '#800000'; ctx.lineWidth = 4; ctx.strokeRect(p-4, p-4, w-p*2+8, h-p*3+8); ctx.fillStyle=fc; ctx.font=`bold ${fSize*1.2}px ${ff}`; ctx.textAlign='center'; ctx.fillText(fTitle || 'CRAWLING IN MY SKIN', w/2, p*0.8); drawBottomText(h - p*0.5, fc, `normal ${fSize}px ${ff}`, 'none'); }
+                else if (s === 'girly') { const p = Math.floor(w * 0.04); ctx.fillStyle = '#ffb6c1'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*2, w, p*2); ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='center'; ctx.shadowColor='#ff69b4'; ctx.shadowBlur=5; ctx.fillText('✨ ' + (fTitle || 'So fetch!') + ' ✨', w/2, p*0.8); ctx.shadowColor='transparent'; drawBottomText(h - p*0.5, fc, `bold ${Math.floor(fSize*0.8)}px ${ff}`, '#ff69b4'); }
+
+                if (State.textOn && State.textStr) {
+                    const lines = State.textStr.split('\n');
+                    ctx.font = `${State.fSize}px ${State.fontFam}`; 
+                    ctx.textAlign = 'center';
+                    const tx = (w * State.tx) / 100, ty = (h * State.ty) / 100;
+                    
+                    if (State.tFrame !== 'none') {
+                        let maxW = 0; lines.forEach(l => { const mw = ctx.measureText(l).width; if(mw > maxW) maxW = mw; });
+                        const boxW = maxW + 20, boxH = (State.fSize * lines.length) + 10;
+                        const bx = tx - boxW/2, by = ty - State.fSize;
+                        
+                        if(State.tFrame === 'solid') { ctx.fillStyle = State.tFrameColor; ctx.fillRect(bx, by, boxW, boxH); }
+                        else if(State.tFrame === 'outline') { ctx.strokeStyle = State.tFrameColor; ctx.lineWidth = 3; ctx.strokeRect(bx, by, boxW, boxH); }
+                        else if(State.tFrame === 'win98') { ctx.fillStyle = '#c0c0c0'; ctx.fillRect(bx, by, boxW, boxH); ctx.strokeStyle = '#dfdfdf'; ctx.lineWidth=2; ctx.strokeRect(bx, by, boxW, boxH); ctx.strokeStyle='#000'; ctx.strokeRect(bx+1, by+1, boxW-2, boxH-2); }
+                    }
+
+                    ctx.fillStyle = State.fontColor; 
+                    ctx.shadowColor = State.shadowColor; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; ctx.shadowBlur = State.shadowBlur;
+                    lines.forEach((line, idx) => { ctx.fillText(line, tx, ty + (idx * State.fSize)); });
+                    ctx.shadowColor = 'transparent';
+                }
+            },
+
+            download: () => { 
+                if (Core.activeIdx === -1) return; 
+                const l = document.createElement('a'); 
+                l.download = `picsos_${Date.now()}.png`; 
+                l.href = canvas.toDataURL('image/png'); 
+                l.click(); 
+            }
+        };
+
+        bindUI(); syncUI();
+    </script>
+</body>
+</html>
