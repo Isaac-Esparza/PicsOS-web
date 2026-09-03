@@ -1,46 +1,49 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>PicsOS</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Comic+Neue:wght@700&family=Impact&family=Press+Start+2P&family=DotGothic16&family=Courier+Prime&family=Creepster&family=Permanent+Marker&family=Times+New+Roman&display=swap');
-        
+       
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Courier+Prime&family=Creepster&family=DotGothic16&family=Permanent+Marker&family=Press+Start+2P&family=VT323&display=swap');
+
         html, body { margin: 0; padding: 0; height: 100%; background: #008080; font-family: 'Tahoma', sans-serif; font-size: 11px; overflow: hidden; user-select: none; }
         .window { display: flex; width: 100%; height: 100%; box-sizing: border-box; padding: 4px; gap: 4px; }
-        
+
         .panel { background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #000000 #000000 #dfdfdf; display: flex; flex-direction: column; }
         .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 3px 5px; font-weight: bold; font-size: 12px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+
+        .sidebar-left { width: 160px; flex-shrink: 0; }
+        .sidebar-right { width: 350px; flex-shrink: 0; }
         
-        .sidebar-left { width: 175px; flex-shrink: 0; }
-        .sidebar-right { width: 385px; flex-shrink: 0; }
-        .canvas-area { flex-grow: 1; background: #808080; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        
+        .canvas-area { flex-grow: 1; background: #808080; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        .canvas-viewport { flex-grow: 1; overflow: auto; position: relative; width: 100%; height: 100%; background: #333333; }
+        .canvas-center { display: flex; justify-content: center; align-items: center; min-width: 100%; min-height: 100%; box-sizing: border-box; }
+
         .content { padding: 8px; overflow-y: auto; flex-grow: 1; }
         .section-title { font-weight: bold; margin: 12px 0 5px 0; color: #000; border-bottom: 1px solid #808080; padding-bottom: 2px; display: flex; justify-content: space-between; align-items: flex-end; }
         label { display: block; margin-top: 6px; margin-bottom: 2px; color: #000; font-size: 10px; }
-        
+
         button { background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #000 #000 #dfdfdf; padding: 5px; cursor: pointer; font-family: 'Tahoma', sans-serif; font-size: 10px; font-weight: bold; width: 100%; margin-bottom: 4px; outline: none; transition: filter 0.1s; }
         button:active, button.active { border-color: #000 #dfdfdf #dfdfdf #000; filter: brightness(0.85); padding: 6px 4px 4px 6px; outline: 1px dotted #000; outline-offset: -4px; }
         .btn-reset { width: auto; font-size: 9px; padding: 2px 5px; border-color: #dfdfdf #808080 #808080 #dfdfdf; color: #800000; margin: 0; }
         .btn-bake { background: #000080; color: #fff; border-color: #dfdfdf #000 #000 #dfdfdf; font-size: 11px; padding: 8px; margin-top: 10px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4); }
-        
+
         .ui-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
         .ui-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
         .ui-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-        .ui-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
-        
+
         .slider-row { display: flex; align-items: center; gap: 5px; }
         input[type="range"] { -webkit-appearance: none; flex-grow: 1; background: transparent; margin: 0; }
         input[type="range"]:focus { outline: none; }
         input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #0078d7; border-radius: 3px; border: 1px solid #005a9e; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #0078d7; cursor: pointer; margin-top: -5px; box-shadow: 0px 1px 2px rgba(0,0,0,0.5); border: 1px solid #fff; }
-        
+
         input[type="text"] { width: 38px; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; padding: 2px; text-align: center; font-size: 10px; }
         input[type="color"] { width: 100%; height: 24px; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; padding: 0; cursor: pointer; }
         select { width: 100%; padding: 3px; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; font-family: 'Tahoma'; font-size: 11px; }
-        
+
         .gallery { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; background: #fff; border: 2px solid; border-color: #000 #dfdfdf #dfdfdf #000; height: 110px; overflow-y: auto; padding: 2px; }
         .thumb { position: relative; height: 60px; cursor: pointer; border: 2px solid transparent; }
         .thumb.active { border-color: #000080; outline: 1px dotted #fff; outline-offset: -3px; }
@@ -49,18 +52,43 @@
         .thumb .btn-left { left: 2px; }
         .thumb .btn-right { left: 20px; }
         .thumb .btn-del { right: 2px; background: #800000; color: #fff; border-color: #fff; }
-        
-        canvas { max-width: 95%; max-height: 95%; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); cursor: grab; }
-        canvas:active { cursor: grabbing; }
+
+        canvas { cursor: crosshair; touch-action: none; transform-origin: center center; display: block; }
         .hidden { display: none !important; }
-        
-        .c-bw { background: #555; color: white; } .c-sepia { background: #d4c3a3; color: #5c4033; } .c-neo { background: #111; color: #f0f; border-color:#f0f; } .c-sun { background: linear-gradient(180deg, #ff9a9e, #fecfef); color: #d32f2f; } .c-cy { background: #aaddff; color: #003366; } .c-rust { background: #8b3a3a; color: #ffcccc; } .c-tox { background: #00ff00; color: #003300; } .c-drm { background: linear-gradient(45deg, #ffc0cb, #e0ffff); color: #555; } .c-ani { background: linear-gradient(180deg, #ffb6c1, #ffdab9); color: #d87093; } .c-chr { background: linear-gradient(90deg, #ccc, #fff, #999); color: #000; } .c-dis { background: #e0f0e0; color: #006400; } .c-inf { background: #ffaaaa; color: #800000; } .c-lomo { background: #ffff00; color: #000; } .c-tech { background: #ff00ff; color: #ffff00; } .c-post { background: #333; color: #0ff; } .c-bld { background: #500; color: #f00; } .c-goth { background: #000; color: #ccc; border-color:#fff; } .c-past { background: #fdfd96; color: #ff6961; }
-        
-        .layer-btn { width: 22px; padding: 2px; font-size: 12px; margin: 0; }
+
         .scroll-box { max-height: 180px; overflow-y: auto; padding: 4px; background: #c0c0c0; border: 1px inset #fff; }
+
+        .c-kodak { background: #ffcc00; color: #000; } .c-fuji { background: #00a060; color: #fff; } .c-polaroid { background: #f9f9f9; color: #333; border-color: #999; } .c-sat { background: #ff0000; color: #ff0; } .c-mut { background: #999; color: #444; } .c-dark { background: #333; color: #888; } .c-light { background: #fff; color: #555; }
+
+        .sticker-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 4px; 
+            height: 250px !important; 
+            min-height: 250px !important;
+            max-height: 250px !important;
+            overflow-y: auto; 
+            background: #fff; 
+            border: 2px inset #dfdfdf; 
+            padding: 4px; 
+            margin-bottom: 5px; 
+            align-content: start; 
+        }
+        .sticker-grid img { width: 100%; height: 75px; object-fit: contain; cursor: pointer; border: 1px solid #ccc; background: #eee; }
+        .sticker-grid img:hover { border-color: #000080; }
     </style>
 </head>
 <body>
+    <div style="position: absolute; width: 0; height: 0; overflow: hidden; visibility: hidden;">
+        <span style="font-family: 'VT323';">.</span>
+        <span style="font-family: 'Comic Neue'; font-weight: bold;">.</span>
+        <span style="font-family: 'Press Start 2P';">.</span>
+        <span style="font-family: 'DotGothic16';">.</span>
+        <span style="font-family: 'Courier Prime';">.</span>
+        <span style="font-family: 'Creepster';">.</span>
+        <span style="font-family: 'Permanent Marker';">.</span>
+    </div>
+
     <div class="window">
         <div class="panel sidebar-left">
             <div class="title-bar"><span>📁 Project</span></div>
@@ -68,36 +96,62 @@
                 <button onclick="document.getElementById('fileIn').click()" style="padding: 9px;">Load Images...</button>
                 <input type="file" id="fileIn" multiple accept="image/*" class="hidden">
                 <div id="gallery" class="gallery"></div>
-                
+
                 <div style="display: flex; gap: 4px; margin-top: 8px;">
                     <button onclick="Engine.undo()" style="color: #800000;">↶ Undo Base</button>
                     <button onclick="location.reload()">Reset App</button>
                 </div>
-                
+
                 <div class="section-title"><span>Workflow</span></div>
-                <button class="nav-btn active" data-target="tab-color">1. Color Tints</button>
-                <button class="nav-btn" data-target="tab-fx">2. Shaders / FX</button>
-                <button class="nav-btn" data-target="tab-frames">3. Frames & HUD</button>
-                <button class="nav-btn" data-target="tab-stickers">4. Emoticons Layer</button>
-                <button class="nav-btn" data-target="tab-text">5. Free Text Box</button>
-                <button class="nav-btn" data-target="tab-collage">6. Collage Mode</button>
-                <button class="nav-btn" data-target="tab-export">7. Export</button>
+                <button class="nav-btn active" data-target="tab-crop">1. Crop</button>
+                <button class="nav-btn" data-target="tab-color">2. Color Tints</button>
+                <button class="nav-btn" data-target="tab-fx">3. Shaders / FX</button>
+                <button class="nav-btn" data-target="tab-frames">4. Frames & HUD</button>
+                <button class="nav-btn" data-target="tab-stickers" style="background: #e6e6fa; color: #000080;">5. Wikimedia</button>
+                <button class="nav-btn" data-target="tab-text">6. Free Text Box</button>
+                <button class="nav-btn" data-target="tab-collage">7. Collage & BG</button>
+                <button class="nav-btn" data-target="tab-export">8. Export</button>
             </div>
         </div>
 
-        <div class="canvas-area" id="canvasContainer">
-            <canvas id="renderCanvas" class="hidden"></canvas>
-            <div id="emptyText" style="color: #dfdfdf; font-weight: bold; font-size: 15px;">NO IMAGES LOADED</div>
-            <div id="dragTooltip" style="position: absolute; bottom: 10px; background: rgba(0,0,0,0.75); color: #0f0; padding: 5px 8px; font-family: monospace; border: 1px solid #0f0; display: none; pointer-events: none;">
-                DRAGGING... FAST RENDER ACTIVE
+        <div class="canvas-area" id="canvasArea">
+            <div id="zoomUI" style="position: absolute; top: 10px; right: 10px; background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #000 #000 #dfdfdf; padding: 4px 6px; display: flex; gap: 6px; align-items: center; z-index: 100; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);">
+                <label style="margin:0;">Zoom:</label>
+                <button onclick="Engine.setZoom(-0.2)" style="width:24px;height:20px;margin:0;padding:0;font-size:12px;">-</button>
+                <span id="zoomTxt" style="font-weight:bold;font-size:11px;width:35px;text-align:center;">FIT</span>
+                <button onclick="Engine.setZoom(0.2)" style="width:24px;height:20px;margin:0;padding:0;font-size:12px;">+</button>
+                <button onclick="Engine.setZoom(0, 0)" style="width:auto;height:20px;margin:0;padding:0 6px;">Fit</button>
+            </div>
+            
+            <div style="position: absolute; bottom: 5px; left: 5px; font-weight: bold; color: rgba(255,255,255,0.8); pointer-events: none; font-size: 10px; z-index: 100; text-shadow: 1px 1px 0 #000;">
+                💡 Shift+Click or Middle Click: Pan | CTRL+Scroll: Zoom
+            </div>
+
+            <div class="canvas-viewport" id="canvasViewport">
+                <div class="canvas-center" id="canvasContainer">
+                    <canvas id="renderCanvas" class="hidden"></canvas>
+                    <div id="emptyText" style="color: #dfdfdf; font-weight: bold; font-size: 15px;">NO IMAGES LOADED</div>
+                </div>
             </div>
         </div>
 
         <div class="panel sidebar-right">
             <div class="title-bar"><span>⚙️ Properties</span></div>
             <div class="content">
-                
-                <div id="tab-color" class="tab-content">
+
+                <div id="tab-crop" class="tab-content">
+                    <div class="section-title"><span>Crop Tool</span><button class="btn-reset" onclick="Reset.tabCrop()">↺ Reset</button></div>
+                    <div class="ui-grid-3 ui-group" id="grp-crop-aspect" style="margin-top: 10px;">
+                        <button class="active" data-val="free">Free</button>
+                        <button data-val="1">1:1 (Square)</button>
+                        <button data-val="1.333">4:3</button>
+                        <button data-val="1.777">16:9</button>
+                        <button data-val="0.5625">9:16</button>
+                    </div>
+                    <button class="btn-bake" onclick="Engine.applyCrop()" style="background:#006400;">[ ✂ APPLY CROP ]</button>
+                </div>
+
+                <div id="tab-color" class="tab-content hidden">
                     <div class="section-title"><span>Basic Aesthetic Matrices</span><button class="btn-reset" onclick="Reset.tabColor()">↺ Reset</button></div>
                     <div class="scroll-box">
                         <div class="ui-grid-3 ui-group" id="grp-color">
@@ -116,6 +170,7 @@
                             <button data-val="redtint" style="background:#ffcccc; color:#800000;">Red Tint</button>
                             <button data-val="greentint" style="background:#ccffcc; color:#008000;">Green Tint</button>
                             <button data-val="bluetint" style="background:#ccccff; color:#000080;">Blue Tint</button>
+                            <button data-val="gold" style="background:#ffd700; color:#000;">Golden Hour</button>
                         </div>
                     </div>
                     <label style="color: #000080; font-weight: bold; margin-top:10px;">Color Filter Intensity (%)</label>
@@ -124,7 +179,7 @@
                     <div class="slider-row"><input type="range" id="s_exp" min="-100" max="100" value="0"><input type="text" id="s_exp_txt" readonly></div>
                     <label>Contrast</label>
                     <div class="slider-row"><input type="range" id="s_cont" min="-100" max="100" value="0"><input type="text" id="s_cont_txt" readonly></div>
-                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 APPLY & BAKE FILTER TO IMAGE ]</button>
+                    <button class="btn-bake" onclick="Engine.bakeBase()">[ 💾 APPLY TO SELECTION ]</button>
                 </div>
 
                 <div id="tab-fx" class="tab-content hidden">
@@ -146,10 +201,6 @@
                             <button data-val="nokia">Nokia 3310 LCD</button>
                             <button data-val="halftone">Print Halftone</button>
                             <button data-val="edge">Sobel Edge Detect</button>
-                            <button data-val="glitch">Datamosh Glitch</button>
-                            <button data-val="ascii">ASCII Text Art</button>
-                            <button data-val="ripple">Water Ripple</button>
-                            <button data-val="emboss">3D Emboss</button>
                             <button data-val="invert" style="background:#000; color:#fff;">Invert Colors</button>
                         </div>
                     </div>
@@ -157,15 +208,15 @@
                     <div class="slider-row"><input type="range" id="s_sint" min="0" max="100" value="100"><input type="text" id="s_sint_txt" readonly></div>
 
                     <div class="section-title"><span>Physical Defects</span></div>
-                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_noise"> Enable Noise/Grain</label>
+                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_noise" autocomplete="off"> Enable Noise/Grain</label>
                     <div class="ui-grid-2">
                         <div><label>Grain Amount</label><div class="slider-row"><input type="range" id="s_namt" min="1" max="200" value="40"><input type="text" id="s_namt_txt" readonly></div></div>
                         <div><label>Grain Size (Blockiness)</label><div class="slider-row"><input type="range" id="s_nsiz" min="1" max="20" value="1"><input type="text" id="s_nsiz_txt" readonly></div></div>
                     </div>
-                    <label style="display:flex; gap:5px; margin-top:10px;"><input type="checkbox" id="c_vignette"> Heavy Lens Vignette</label>
+                    <label style="display:flex; gap:5px; margin-top:10px;"><input type="checkbox" id="c_vignette" autocomplete="off"> Heavy Lens Vignette</label>
                     <label>Chromatic Aberration (RGB Shift)</label>
                     <div class="slider-row"><input type="range" id="s_rgb" min="0" max="40" value="0"><input type="text" id="s_rgb_txt" readonly></div>
-                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 APPLY & BAKE SHADER TO IMAGE ]</button>
+                    <button class="btn-bake" onclick="Engine.bakeBase()">[ 💾 APPLY TO SELECTION ]</button>
                 </div>
 
                 <div id="tab-frames" class="tab-content hidden">
@@ -193,6 +244,8 @@
                             <button data-val="myspace" style="background:#003399; color:#fff;">MySpace BG</button>
                             <button data-val="gothic" style="background:#222; color:#800000; font-family:Creepster;">Gothic Frame</button>
                             <button data-val="girly" style="background:#ffb6c1; color:#fff;">Girly Sparkle</button>
+                            <button data-val="hacker" style="background:#000; color:#0f0;">Hacker Terminal</button>
+                            <button data-val="hearts" style="background:#ffe4e1; color:#ff1493;">Valentine Hearts</button>
                         </div>
                     </div>
 
@@ -201,13 +254,19 @@
                         <div>
                             <label>Frame Font Style</label>
                             <select id="sel_ffont">
-                                <option value="Arial">Arial (System)</option>
-                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Arial, sans-serif">Arial (System)</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
                                 <option value="'VT323', monospace">Digital / Terminal</option>
+                                <option value="'DotGothic16', sans-serif">Dot Gothic (Web)</option>
                                 <option value="'Press Start 2P', cursive">8-Bit Arcade</option>
-                                <option value="'Comic Sans MS', 'Comic Neue'">Comic Sans MS</option>
-                                <option value="Impact">Impact (Meme)</option>
+                                <option value="'Comic Sans MS', 'Comic Neue', cursive">Comic Sans / Neue</option>
+                                <option value="'Courier Prime', monospace">Typewriter</option>
+                                <option value="Impact, sans-serif">Impact (Meme)</option>
                                 <option value="'Creepster', cursive">Creepy 90s</option>
+                                <option value="'Permanent Marker', cursive">Marker Font</option>
+                                <option value="Papyrus, fantasy">Papyrus (Classic)</option>
+                                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                                <option value="'Lucida Console', monospace">Lucida Console</option>
                             </select>
                         </div>
                         <div><label>Frame Text Color</label><input type="color" id="c_ffont" value="#ffffff"></div>
@@ -215,59 +274,58 @@
 
                     <label style="margin-top:8px;">Main Title (Top / Main Text)</label>
                     <input type="text" id="t_frame_title" value="TITLE" style="width: 100%; margin-bottom: 5px; padding: 3px; box-sizing: border-box;">
-                    
-                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_frame_bot"> Enable Subtitle (Bottom Text)</label>
+
+                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_frame_bot" autocomplete="off"> Enable Subtitle (Bottom Text)</label>
                     <input type="text" id="t_frame_sub" value="Bottom Text" style="width: 100%; margin-bottom: 5px; padding: 3px; box-sizing: border-box;">
-                    
+
                     <label>Overall Frame Text Size</label>
                     <div class="slider-row"><input type="range" id="s_frm_size" min="10" max="150" value="40"><input type="text" id="s_frm_size_txt" readonly></div>
-                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE FRAME TO IMAGE ]</button>
+                    <button class="btn-bake" onclick="Engine.bakeFlat()">[ 💾 BAKE FRAME TO IMAGE ]</button>
                 </div>
 
                 <div id="tab-stickers" class="tab-content hidden">
-                    <div class="section-title"><span>Old Web Emoticons</span><button class="btn-reset" onclick="Reset.tabStickers()">↺ Clear All</button></div>
-                    <div class="scroll-box" style="max-height: 80px; margin-bottom:10px;">
-                        <div class="ui-grid-5" id="sticker-bank">
-                        </div>
+                    <div class="section-title"><span>Wikimedia Commons Search</span></div>
+                    <p style="color:#000080; font-size:10px; margin: 4px 0;">* Search for free images on Wikipedia (no API limits).</p>
+                    <div style="display:flex; gap:4px; margin-bottom: 5px; margin-top: 10px;">
+                        <input type="text" id="stk_search" placeholder="Search Wikipedia..." style="flex-grow:1; text-align:left; width:auto; font-size:12px; padding:4px;">
+                        <button onclick="Engine.searchStickers()" style="width:60px; margin:0;">Search</button>
                     </div>
 
-                    <div class="section-title"><span>ASCII Art Elements</span></div>
-                    <div class="scroll-box" style="max-height: 100px;">
-                        <div class="ui-grid-3" id="ascii-bank">
-                        </div>
+                    <div id="stk_results" class="sticker-grid"></div>
+
+                    <div style="display:flex; justify-content:flex-end; align-items:flex-end;">
+                        <button class="btn-reset" onclick="Reset.tabStickers()" style="margin-top:5px; margin-bottom:5px;">↺ Clear Canvas</button>
                     </div>
-                    
-                    <div class="section-title"><span>Active Layers (Drag & Recolor)</span></div>
-                    <div id="active-stickers" style="display:flex; flex-direction:column; gap:2px; height:100px; overflow-y:auto; background:#fff; border: 2px solid #808080; padding:2px;">
-                    </div>
-                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE STICKERS TO IMAGE ]</button>
+                    <button class="btn-bake" onclick="Engine.bakeFlat()">[ 💾 BAKE CONTENT TO IMAGE ]</button>
                 </div>
 
                 <div id="tab-text" class="tab-content hidden">
                     <div class="section-title"><span>Interactive Free Text Box</span><button class="btn-reset" onclick="Reset.tabText()">↺ Reset</button></div>
-                    <p style="color:#000080; font-weight:bold; font-size:10px; margin: 4px 0;">* Drag the text directly inside the canvas. Scroll mouse to resize.</p>
-                    <label style="display:flex; gap:5px;"><input type="checkbox" id="c_text"> Enable Free Text Module</label>
+                    <label style="display:flex; gap:5px; margin-top: 10px;"><input type="checkbox" id="c_text" autocomplete="off"> Enable Free Text Module</label>
                     <textarea id="t_str" style="width: 100%; height:40px; margin-bottom: 5px; font-size: 13px; padding: 3px; box-sizing: border-box; resize:none;">PICSOS 2000</textarea>
-                    
+
                     <div class="ui-grid-2">
                         <div>
                             <label>Font Style</label>
                             <select id="sel_font">
-                                <option value="Arial">Arial (System)</option>
-                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Arial, sans-serif">Arial (System)</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
                                 <option value="'VT323', monospace">Digital (Camcorder)</option>
                                 <option value="'DotGothic16', sans-serif">Dot Gothic (Web)</option>
                                 <option value="'Press Start 2P', cursive">8-Bit Arcade</option>
-                                <option value="'Comic Sans MS', 'Comic Neue'">Comic Sans MS</option>
+                                <option value="'Comic Sans MS', 'Comic Neue', cursive">Comic Sans / Neue</option>
                                 <option value="'Courier Prime', monospace">Typewriter</option>
-                                <option value="Impact">Impact (Meme)</option>
+                                <option value="Impact, sans-serif">Impact (Meme)</option>
                                 <option value="'Creepster', cursive">Creepy 90s</option>
                                 <option value="'Permanent Marker', cursive">Marker Font</option>
+                                <option value="Papyrus, fantasy">Papyrus (Classic)</option>
+                                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                                <option value="'Lucida Console', monospace">Lucida Console</option>
                             </select>
                         </div>
                         <div><label>Text Color</label><input type="color" id="c_font" value="#ffffff"></div>
                     </div>
-                    
+
                     <div class="ui-grid-2" style="margin-top: 5px;">
                         <div>
                             <label>Text Box Frame</label>
@@ -287,15 +345,13 @@
                     </div>
                     <label>Font Size</label>
                     <div class="slider-row"><input type="range" id="s_fsize" min="10" max="300" value="48"><input type="text" id="s_fsize_txt" readonly></div>
-                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE TEXT TO IMAGE ]</button>
+                    <button class="btn-bake" onclick="Engine.bakeFlat()">[ 💾 BAKE TEXT TO IMAGE ]</button>
                 </div>
 
                 <div id="tab-collage" class="tab-content hidden">
                     <div class="section-title"><span>Grid & Placement Modes</span><button class="btn-reset" onclick="Reset.tabCollage()">↺ Reset</button></div>
-                    <p style="color:#000080; font-weight:bold; font-size:10px; margin: 4px 0;">* FREEFORM: Drag images around. SCROLL WHEEL to scale.</p>
-                    <div class="ui-grid-3 ui-group" id="grp-grid">
-                        <button class="active" data-val="1">Single Mode</button>
-                        <button data-val="free" style="background:#000080; color:#fff; border-color:#fff;">TRUE FREEFORM</button>
+                    <div class="ui-grid-3 ui-group" id="grp-grid" style="margin-top: 10px;">
+                        <button class="active" data-val="free" style="background:#000080; color:#fff; border-color:#fff;">Transform Canvas</button>
                         <button data-val="photobooth">Photobooth Strip</button>
                         <button data-val="2h">Split H (1x2)</button>
                         <button data-val="2v">Split V (2x1)</button>
@@ -310,11 +366,19 @@
                         <button data-val="1.77">16:9</button>
                         <button data-val="0.56">9:16</button>
                     </div>
-                    <div class="ui-grid-2" style="margin-top: 10px;">
-                        <div><label>Matte / Bg Color</label><input type="color" id="c_bg" value="#000000"></div>
-                        <div><label>Inner Padding</label><div class="slider-row"><input type="range" id="s_pad" min="0" max="40" value="4"><input type="text" id="s_pad_txt" readonly></div></div>
+
+                    <div class="section-title"><span>Canvas Background</span></div>
+                    <div class="ui-grid-2" style="margin-top: 5px;">
+                        <button onclick="document.getElementById('bgFileIn').click()">Load BG Image...</button>
+                        <button onclick="Core.bgImg = null; Engine.run();" style="color:red;">Clear BG Image</button>
+                        <input type="file" id="bgFileIn" accept="image/*" class="hidden">
                     </div>
-                    <button class="btn-bake" onclick="Reset.bakeFX()">[ 💾 BAKE COLLAGE GEOMETRY ]</button>
+
+                    <div class="ui-grid-2" style="margin-top: 10px;">
+                        <div><label>Solid Matte Color</label><input type="color" id="c_bg" value="#000000"></div>
+                        <div><label>Inner Padding (Grid)</label><div class="slider-row"><input type="range" id="s_pad" min="0" max="40" value="4"><input type="text" id="s_pad_txt" readonly></div></div>
+                    </div>
+                    <button class="btn-bake" onclick="Engine.bakeFlat()">[ 💾 BAKE COLLAGE GEOMETRY ]</button>
                 </div>
 
                 <div id="tab-export" class="tab-content hidden">
@@ -323,11 +387,11 @@
                     <div class="slider-row"><input type="range" id="s_jpeg" min="1" max="100" value="100"><input type="text" id="s_jpeg_txt" readonly></div>
                     <label>Pixelate Block Size</label>
                     <div class="slider-row"><input type="range" id="s_pix" min="1" max="30" value="1"><input type="text" id="s_pix_txt" readonly></div>
-                    
+
                     <div class="section-title"><span>Export Resolution</span></div>
                     <label>Longest Edge (Pixels)</label>
                     <div class="slider-row"><input type="range" id="s_res" min="240" max="2000" value="800"><input type="text" id="s_res_txt" readonly></div>
-                    
+
                     <button onclick="Engine.download()" style="margin-top: 20px; padding: 14px; font-size: 13px; background: #90ee90; color: #000;">💾 SAVE TO DISK</button>
                 </div>
 
@@ -336,47 +400,40 @@
     </div>
 
     <script>
-        const Core = { images: [], activeIdx: -1, history: [] };
+        const Core = { images: [], activeIdx: -1, activeStickerIdx: -1, history: [], bgImg: null, stickerCache: {}, cropBox: {x:0, y:0, w:1, h:1}, zoom: 0, PAD: 100 };
 
         const defaultState = () => ({
+            cropAspect: 'free',
             color: 'none', exp: 0, cont: 0, intensity: 100,
             shader: 'none', sInt: 100, noise: false, noiseAmt: 40, noiseSize: 1, vignette: false, rgbSplit: 0,
-            frame: 'none', frameTitle: 'TITLE', frameSub: 'Bottom Text', frameFSize: 40, frameBotOn: false, frameFont: 'Arial', frameColor: '#ffffff',
+            frame: 'none', frameTitle: 'TITLE', frameSub: 'Bottom Text', frameFSize: 40, frameBotOn: false, frameFont: 'Arial, sans-serif', frameColor: '#ffffff',
+            textOn: false, textStr: 'PICSOS 2000', fontFam: 'Arial, sans-serif', fontColor: '#ffffff', shadowColor: '#000000', shadowBlur: 2, fSize: 48, tx: 50, ty: 50, tFrame: 'none', tFrameColor: '#000000',
+            grid: 'free', aspect: 1, pad: 4, bgColor: '#000000',
             stickers: [],
-            textOn: false, textStr: 'PICSOS 2000', fontFam: 'Arial', fontColor: '#ffffff', shadowColor: '#000000', shadowBlur: 2, fSize: 48, tx: 50, ty: 50, tFrame: 'none', tFrameColor: '#000000',
-            grid: '1', aspect: 1, pad: 4, bgColor: '#000000',
             jpeg: 100, pixelSize: 1, res: 800
         });
-        
-        let State = defaultState();
-        let fastTimeout = null;
 
+        let State = defaultState();
         const canvas = document.getElementById('renderCanvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         const pushHistory = () => {
             if(Core.history.length > 20) Core.history.shift();
-            Core.history.push(JSON.parse(JSON.stringify(State)));
+            const copyState = JSON.parse(JSON.stringify(State));
+            // Guardamos el estado actual exacto de las posiciones antes del arrastre
+            copyState.__imgTransforms = Core.images.map(img => img.ft ? { ...img.ft } : null);
+            copyState.__cropBox = { ...Core.cropBox };
+            Core.history.push(copyState);
         };
 
         const Reset = {
+            tabCrop: () => { Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI(); Engine.run(); },
             tabColor: () => { pushHistory(); const d = defaultState(); State.color = d.color; State.exp = d.exp; State.cont = d.cont; State.intensity = d.intensity; syncUI(); Engine.run(); },
             tabFx: () => { pushHistory(); const d = defaultState(); State.shader = d.shader; State.sInt = d.sInt; State.noise = d.noise; State.noiseAmt = d.noiseAmt; State.noiseSize = d.noiseSize; State.vignette = d.vignette; State.rgbSplit = d.rgbSplit; syncUI(); Engine.run(); },
             tabText: () => { pushHistory(); const d = defaultState(); Object.assign(State, {textOn: d.textOn, textStr: d.textStr, fontFam: d.fontFam, fontColor: d.fontColor, shadowColor: d.shadowColor, shadowBlur: d.shadowBlur, fSize: d.fSize, tx: d.tx, ty: d.ty, tFrame: d.tFrame, tFrameColor: d.tFrameColor}); syncUI(); Engine.run(); },
             tabFrames: () => { pushHistory(); const d = defaultState(); State.frame = d.frame; State.frameTitle = d.frameTitle; State.frameSub = d.frameSub; State.frameFSize = d.frameFSize; State.frameBotOn = d.frameBotOn; State.frameFont = d.frameFont; State.frameColor = d.frameColor; syncUI(); Engine.run(); },
-            tabStickers: () => { pushHistory(); State.stickers = []; updateStickersUI(); Engine.run(); },
-            tabCollage: () => { pushHistory(); const d = defaultState(); Object.assign(State, {grid: d.grid, aspect: d.aspect, pad: d.pad, bgColor: d.bgColor}); syncUI(); Engine.run(); },
-            bakeFX: () => {
-                if (Core.activeIdx === -1) return;
-                const data = canvas.toDataURL('image/png');
-                const img = new Image();
-                img.onload = () => {
-                    Core.images[Core.activeIdx] = img;
-                    State = defaultState(); 
-                    syncUI(); Engine.run(); updateGallery();
-                };
-                img.src = data;
-            }
+            tabCollage: () => { pushHistory(); const d = defaultState(); Object.assign(State, {grid: d.grid, aspect: d.aspect, pad: d.pad, bgColor: d.bgColor}); Core.bgImg = null; syncUI(); Engine.run(); },
+            tabStickers: () => { pushHistory(); State.stickers = []; Core.activeStickerIdx = -1; Engine.run(); }
         };
 
         const syncUI = () => {
@@ -391,80 +448,22 @@
                 grp.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                 const btn = grp.querySelector(`button[data-val="${val}"]`); if(btn) btn.classList.add('active');
             };
-            setG('grp-color', State.color); setG('grp-shader', State.shader); setG('grp-frame', State.frame); setG('grp-grid', State.grid); setG('grp-aspect', State.aspect);
+            setG('grp-crop-aspect', State.cropAspect); setG('grp-color', State.color); setG('grp-shader', State.shader); setG('grp-frame', State.frame); setG('grp-grid', State.grid); setG('grp-aspect', State.aspect);
 
             document.getElementById('c_noise').checked = State.noise; document.getElementById('c_vignette').checked = State.vignette; document.getElementById('c_text').checked = State.textOn; document.getElementById('c_frame_bot').checked = State.frameBotOn;
             document.getElementById('t_str').value = State.textStr; document.getElementById('t_frame_title').value = State.frameTitle; document.getElementById('t_frame_sub').value = State.frameSub; 
             document.getElementById('c_font').value = State.fontColor; document.getElementById('c_shadow').value = State.shadowColor; document.getElementById('c_bg').value = State.bgColor; document.getElementById('c_ffont').value = State.frameColor;
             document.getElementById('sel_font').value = State.fontFam; document.getElementById('sel_tframe').value = State.tFrame; document.getElementById('c_tframe').value = State.tFrameColor; document.getElementById('sel_ffont').value = State.frameFont;
-            updateStickersUI();
-        };
-
-        const ClassicMoticons = [':v', ':)', ':(', ':D', 'xD', ':p', '<3', '(y)', '(n)', 'O_o', '-_-', '8)', 'T_T', '^_^', '>:(', ':3', 'x_x', '._.', 'OwO', '☻', '★', '♥', '♪', '☠', '✔', '✘', '✌', '☯', '¯\\_(ツ)_/¯', '( ͡° ͜ʖ ͡°)', 'ʕ•ᴥ•ʔ', '(⌐■_■)', 'ಥ_ಥ', 'UnU', 'UwU', '>_<', ';-;', 'ಠ_ಠ', '(╯°□°）╯︵ ┻━┻', 'ᕙ(⇀‸↼‶)ᕗ', '༼ つ ◕_◕ ༽つ', 'ᶘ ᵒᴥᵒᶅ', '>:V', '7w7', 'TwT', 'ToT', ':c', 'c:', '>:3', 'ewe', '(*^ω^*)', '(◕‿◕✿)', '(^._.^)ﾉ', '(=^･ω･^=)'];
-        const bank = document.getElementById('sticker-bank');
-        ClassicMoticons.forEach(em => {
-            const b = document.createElement('button'); b.innerText = em; b.style.fontSize='14px'; b.style.padding='4px'; b.style.fontFamily='Arial';
-            b.onclick = () => { pushHistory(); State.stickers.push({ id: Date.now(), text: em, x: 50, y: 50, size: 80, rot: 0, color: '#ffffff' }); updateStickersUI(); Engine.run(); };
-            bank.appendChild(b);
-        });
-
-        const ASCIIArts = [
-            " /\\_/\\\n( o.o )\n > ^ <", " (\\_/)\n( •_•)\n/ > ♥", "[SYSTEM\n ERROR]", 
-            "o()==[════=>", " ▄︻̷̿┻̿═━一", "@}--,--'--", "/|\\ ^._.^ /|\\", 
-            "<`(((><", "   |\\__/,|   (`\\\n _.|o o  |_   ) )\n-(((---(((--------", " ||||| \n|o o| \n| L | \n \\=/ ",
-            " \\_/\n(* *) \n \\_/", "  /\\ \n //\\\\ \n///\\\\\\ \n  ||", " ^..^\n(oo)", " \\_\\_ \n(o.o)\n ( )",
-            " ,---.\n( @ @ )\n ).-.( \n'/|||\\`", " \\_v_/\n( . . )\n(  u  )",
-            " /\\_/\\\n=( °w° )=\n )   ( //\n(__ __)//", " (\\_/)\n (^_^) \n(____)0",
-            "  _._     _,-'\"\"`-._\n (,-.`._,'(       |\\`-/|\n     `-.-' \\ )-`( , o o)\n           `-    \\`_`\"'-",
-            " ⣿⣿⣿⣿\n ⣿⣿⣿⣿\n ⣿⣿⣿⣿", " ┏(-\_-)┛\n┗(-\_- )┓"
-        ];
-        const asciiBank = document.getElementById('ascii-bank');
-        ASCIIArts.forEach(asc => {
-            const b = document.createElement('button'); b.innerText = asc; b.style.fontSize='8px'; b.style.padding='2px'; b.style.fontFamily='"Courier Prime", monospace'; b.style.whiteSpace='pre'; b.style.textAlign='left';
-            b.onclick = () => { pushHistory(); State.stickers.push({ id: Date.now(), text: asc, x: 50, y: 50, size: 120, rot: 0, color: '#ffffff' }); updateStickersUI(); Engine.run(); };
-            asciiBank.appendChild(b);
-        });
-
-        const updateStickersUI = () => {
-            const cont = document.getElementById('active-stickers'); cont.innerHTML = '';
-            [...State.stickers].reverse().forEach((stk, revIdx) => {
-                const i = State.stickers.length - 1 - revIdx;
-                const row = document.createElement('div');
-                row.style.display = 'flex'; row.style.gap = '2px'; row.style.alignItems = 'center'; row.style.marginBottom = '2px'; row.style.background = '#e0e0e0'; row.style.padding = '2px';
-                
-                const lbl = document.createElement('div'); lbl.innerText = stk.text.replace(/\n/g, '↵'); lbl.style.fontSize='12px'; lbl.style.width='40px'; lbl.style.textAlign='left'; lbl.style.whiteSpace='nowrap'; lbl.style.overflow='hidden';
-                
-                const sizer = document.createElement('input'); sizer.type = 'range'; sizer.min=10; sizer.max=800; sizer.value=stk.size; sizer.style.width='30px';
-                sizer.oninput = e => { stk.size = e.target.value; Engine.run(true); clearTimeout(fastTimeout); fastTimeout = setTimeout(Engine.run, 200); }; sizer.onchange = () => { pushHistory(); Engine.run(); };
-
-                const rot = document.createElement('input'); rot.type = 'range'; rot.min=-180; rot.max=180; rot.value=stk.rot; rot.style.width='30px';
-                rot.oninput = e => { stk.rot = e.target.value; Engine.run(true); clearTimeout(fastTimeout); fastTimeout = setTimeout(Engine.run, 200); }; rot.onchange = () => { pushHistory(); Engine.run(); };
-
-                const col = document.createElement('input'); col.type = 'color'; col.value = stk.color || '#ffffff'; col.style.width='18px'; col.style.height='18px'; col.style.padding='0';
-                col.oninput = e => { stk.color = e.target.value; Engine.run(true); }; col.onchange = () => { pushHistory(); Engine.run(); };
-
-                const btnUp = document.createElement('button'); btnUp.innerText='▲'; btnUp.className='layer-btn';
-                btnUp.onclick = () => { if(i<State.stickers.length-1){ pushHistory(); [State.stickers[i], State.stickers[i+1]] = [State.stickers[i+1], State.stickers[i]]; updateStickersUI(); Engine.run(); } };
-
-                const btnDn = document.createElement('button'); btnDn.innerText='▼'; btnDn.className='layer-btn';
-                btnDn.onclick = () => { if(i>0){ pushHistory(); [State.stickers[i-1], State.stickers[i]] = [State.stickers[i], State.stickers[i-1]]; updateStickersUI(); Engine.run(); } };
-
-                const btnDel = document.createElement('button'); btnDel.innerText='✖'; btnDel.className='layer-btn'; btnDel.style.color='red';
-                btnDel.onclick = () => { pushHistory(); State.stickers.splice(i, 1); updateStickersUI(); Engine.run(); };
-
-                row.appendChild(lbl); row.appendChild(sizer); row.appendChild(rot); row.appendChild(col); row.appendChild(btnUp); row.appendChild(btnDn); row.appendChild(btnDel);
-                cont.appendChild(row);
-            });
         };
 
         const bindUI = () => {
             const upd = () => Engine.run();
             const bindS = (id, key, parse) => {
                 const sl = document.getElementById(id); const txt = document.getElementById(id+'_txt');
-                sl.addEventListener('change', pushHistory);
+                sl.addEventListener('pointerdown', pushHistory); // Capturar historia ANTES de mover el slider
                 sl.addEventListener('input', e => { txt.value = e.target.value; State[key] = parse(e.target.value); upd(); });
             };
-            
+
             ['s_exp','s_cont','s_int','s_sint','s_rgb','s_namt','s_nsiz','s_jpeg','s_pix','s_res','s_fsize','s_sblur','s_pad','s_frm_size'].forEach(id => {
                 let key = id.replace('s_','');
                 if(key==='pix') key='pixelSize'; if(key==='int') key='intensity'; if(key==='sint') key='sInt';
@@ -476,18 +475,51 @@
             const bindG = (id, key, p = x => x) => {
                 const grp = document.getElementById(id);
                 grp.querySelectorAll('button').forEach(b => {
-                    b.addEventListener('click', e => { pushHistory(); grp.querySelectorAll('button').forEach(btn => btn.classList.remove('active')); e.target.classList.add('active'); State[key] = p(e.target.dataset.val); upd(); });
+                    b.addEventListener('click', e => { 
+                        pushHistory(); 
+                        grp.querySelectorAll('button').forEach(btn => btn.classList.remove('active')); 
+                        e.target.classList.add('active'); 
+                        State[key] = p(e.target.dataset.val); 
+                        
+                        if (id === 'grp-crop-aspect') {
+                            if (State[key] === 'free') {
+                                Core.cropBox = { x: 0, y: 0, w: 1, h: 1 };
+                            } else {
+                                const aspect = parseFloat(State[key]);
+                                let activeTarget = null, sImg = null;
+                                if (Core.activeStickerIdx !== -1 && State.stickers[Core.activeStickerIdx]) {
+                                    sImg = Core.stickerCache[State.stickers[Core.activeStickerIdx].src];
+                                } else if (Core.activeIdx !== -1 && Core.images[Core.activeIdx]) {
+                                    sImg = Core.images[Core.activeIdx];
+                                }
+                                if (sImg) {
+                                    const imgAspect = sImg.width / sImg.height;
+                                    let w = 1, h = 1;
+                                    if (aspect > imgAspect) { w = 1; h = imgAspect / aspect; } 
+                                    else { h = 1; w = aspect / imgAspect; }
+                                    Core.cropBox = { x: 0.5 - w/2, y: 0.5 - h/2, w, h };
+                                }
+                            }
+                        }
+                        upd(); 
+                    });
                 });
             };
-            bindG('grp-color', 'color'); bindG('grp-shader', 'shader'); bindG('grp-frame', 'frame'); bindG('grp-grid', 'grid'); bindG('grp-aspect', 'aspect', parseFloat);
+            
+            bindG('grp-crop-aspect', 'cropAspect'); bindG('grp-color', 'color'); bindG('grp-shader', 'shader'); bindG('grp-frame', 'frame'); bindG('grp-grid', 'grid'); bindG('grp-aspect', 'aspect', parseFloat);
 
             ['c_noise', 'c_vignette', 'c_text', 'c_frame_bot'].forEach(id => { 
-                document.getElementById(id).addEventListener('change', e => { pushHistory(); State[id.replace('c_','').replace('text','textOn').replace('frame_bot','frameBotOn')] = e.target.checked; upd(); }); 
+                document.getElementById(id).addEventListener('change', e => { 
+                    pushHistory(); 
+                    State[id.replace('c_','').replace('text','textOn').replace('frame_bot','frameBotOn')] = e.target.checked; 
+                    upd(); 
+                }); 
             });
-            
+
             const bindTxt = (id, key) => { 
                 const el = document.getElementById(id); 
-                el.addEventListener('input', e => { State[key] = e.target.value; upd(); }); el.addEventListener('change', pushHistory); 
+                el.addEventListener('focus', pushHistory); // Capturar antes de escribir/cambiar fuente
+                el.addEventListener('input', e => { State[key] = e.target.value; upd(); }); 
             };
             bindTxt('t_str', 'textStr'); bindTxt('t_frame_title', 'frameTitle'); bindTxt('t_frame_sub', 'frameSub');
             bindTxt('c_font', 'fontColor'); bindTxt('c_shadow', 'shadowColor'); bindTxt('c_bg', 'bgColor'); 
@@ -498,155 +530,726 @@
                 btn.addEventListener('click', e => {
                     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
                     e.target.classList.add('active'); document.getElementById(e.target.dataset.target).classList.remove('hidden');
+                    Engine.run();
                 });
+            });
+
+            document.getElementById('stk_search').addEventListener('keydown', e => {
+                if(e.key === 'Enter') Engine.searchStickers();
             });
 
             const handleFiles = (files) => {
                 Array.from(files).forEach(f => {
                     if(!f.type.startsWith('image/')) return;
-                    const r = new FileReader(); r.onload = ev => { const img = new Image(); img.onload = () => { Core.images.push(img); if (Core.activeIdx === -1) Core.activeIdx = 0; updateGallery(); pushHistory(); Engine.run(); }; img.src = ev.target.result; }; r.readAsDataURL(f);
+                    const r = new FileReader(); r.onload = ev => { const img = new Image(); img.onload = () => { 
+                        let w = State.res, h = State.res;
+                        const ratio = img.width / img.height;
+                        if (ratio > 1) h = Math.round(State.res / ratio); else w = Math.round(State.res * ratio);
+                        img.ft = { x: w/2, y: h/2, r: 0, s: 2.5 }; 
+                        Core.images.push(img); if (Core.activeIdx === -1) Core.activeIdx = 0; Core.cropBox = {x:0, y:0, w:1, h:1}; updateGallery(); pushHistory(); Engine.run(); 
+                    }; img.src = ev.target.result; }; r.readAsDataURL(f);
                 });
             };
 
             document.getElementById('fileIn').addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
-            const cArea = document.getElementById('canvasContainer');
+            document.getElementById('bgFileIn').addEventListener('change', e => { 
+                if(e.target.files[0]) {
+                    const r = new FileReader(); r.onload = ev => { const img = new Image(); img.onload = () => { Core.bgImg = img; Engine.run(); }; img.src = ev.target.result; }; r.readAsDataURL(e.target.files[0]);
+                }
+            });
+            const cArea = document.getElementById('canvasArea');
             cArea.addEventListener('dragover', e => { e.preventDefault(); });
             cArea.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files && e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files); });
+
+            const cViewport = document.getElementById('canvasViewport');
+            let isPanning = false, startPanX, startPanY, startScrollX, startScrollY;
+
+            cViewport.addEventListener('pointerdown', e => {
+                if (e.button === 1 || e.shiftKey) {
+                    isPanning = true;
+                    startPanX = e.clientX;
+                    startPanY = e.clientY;
+                    startScrollX = cViewport.scrollLeft;
+                    startScrollY = cViewport.scrollTop;
+                    cViewport.style.cursor = 'grabbing';
+                }
+            });
+
+            window.addEventListener('pointermove', e => {
+                if (isPanning) {
+                    cViewport.scrollLeft = startScrollX - (e.clientX - startPanX);
+                    cViewport.scrollTop = startScrollY - (e.clientY - startPanY);
+                }
+            });
+
+            window.addEventListener('pointerup', () => {
+                if(isPanning) { isPanning = false; cViewport.style.cursor = 'default'; }
+            });
+
+            cViewport.addEventListener('wheel', e => {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    Engine.setZoom(-e.deltaY * 0.001);
+                }
+            }, { passive: false });
         };
 
         const updateGallery = () => {
             const gal = document.getElementById('gallery'); gal.innerHTML = '';
             Core.images.forEach((img, i) => {
                 const wrap = document.createElement('div'); wrap.className = `thumb ${i === Core.activeIdx ? 'active' : ''}`;
-                wrap.onclick = () => { Core.activeIdx = i; updateGallery(); pushHistory(); Engine.run(); };
+                wrap.onclick = () => { Core.activeIdx = i; Core.activeStickerIdx = -1; Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI(); updateGallery(); pushHistory(); Engine.run(); };
                 const elImg = document.createElement('img'); elImg.src = img.src;
-                
+
                 const btnLeft = document.createElement('button'); btnLeft.className = 'btn-gal btn-left'; btnLeft.innerText = '◀';
-                btnLeft.onclick = (e) => { e.stopPropagation(); if(i>0){ let t=Core.images[i]; Core.images[i]=Core.images[i-1]; Core.images[i-1]=t; Core.activeIdx=i-1; updateGallery(); pushHistory(); Engine.run(); } };
-                
+                btnLeft.onclick = (e) => { e.stopPropagation(); if(i>0){ let t=Core.images[i]; Core.images[i]=Core.images[i-1]; Core.images[i-1]=t; Core.activeIdx=i-1; Core.activeStickerIdx = -1; Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI(); updateGallery(); pushHistory(); Engine.run(); } };
+
                 const btnRight = document.createElement('button'); btnRight.className = 'btn-gal btn-right'; btnRight.innerText = '▶';
-                btnRight.onclick = (e) => { e.stopPropagation(); if(i<Core.images.length-1){ let t=Core.images[i]; Core.images[i]=Core.images[i+1]; Core.images[i+1]=t; Core.activeIdx=i+1; updateGallery(); pushHistory(); Engine.run(); } };
-                
+                btnRight.onclick = (e) => { e.stopPropagation(); if(i<Core.images.length-1){ let t=Core.images[i]; Core.images[i]=Core.images[i+1]; Core.images[i+1]=t; Core.activeIdx=i+1; Core.activeStickerIdx = -1; Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI(); updateGallery(); pushHistory(); Engine.run(); } };
+
                 const btnX = document.createElement('button'); btnX.className = 'btn-gal btn-del'; btnX.innerText = 'X';
-                btnX.onclick = (e) => { e.stopPropagation(); Core.images.splice(i, 1); Core.activeIdx = Core.images.length > 0 ? 0 : -1; updateGallery(); pushHistory(); Engine.run(); };
-                
+                btnX.onclick = (e) => { e.stopPropagation(); Core.images.splice(i, 1); Core.activeIdx = Core.images.length > 0 ? 0 : -1; Core.activeStickerIdx = -1; Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI(); updateGallery(); pushHistory(); Engine.run(); };
+
                 wrap.appendChild(elImg); wrap.appendChild(btnLeft); wrap.appendChild(btnRight); wrap.appendChild(btnX); gal.appendChild(wrap);
             });
         };
 
-        let dragInfo = { active: false, target: null };
-        canvas.addEventListener('mousedown', e => {
-            if(Core.activeIdx === -1) return;
+        const getLogicalDims = () => {
+            let w = State.res, h = State.res;
+            if (State.grid === 'free' || State.grid === 'photobooth') {
+                if(Core.activeIdx !== -1 && Core.images[Core.activeIdx]) {
+                    const ratio = Core.images[Core.activeIdx].width / Core.images[Core.activeIdx].height;
+                    if (ratio > 1) h = Math.round(State.res / ratio); else w = Math.round(State.res * ratio);
+                }
+            } else h = Math.round(State.res / State.aspect);
+            return { w, h };
+        };
+
+        const getMousePos = (e) => {
             const rect = canvas.getBoundingClientRect();
-            const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
-            const mx = (e.clientX - rect.left) * sx, my = (e.clientY - rect.top) * sy;
+            const { w, h } = getLogicalDims();
+            const pad = Core.PAD;
+            const scaleX = (w + pad * 2) / rect.width;
+            const scaleY = (h + pad * 2) / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX - pad;
+            const my = (e.clientY - rect.top) * scaleY - pad;
+            return { mx, my, w, h };
+        };
+
+        let dragInfo = { active: false, hasMoved: false, mode: null, offX: 0, offY: 0, initS: 1, initDist: 1, initR: 0, initAngle: 0 };
+
+        canvas.addEventListener('pointerdown', e => {
+            if (e.button === 1 || e.shiftKey) return; 
+            if(Core.activeIdx === -1 || !Core.images[Core.activeIdx]) return;
+
+            const { mx, my, w, h } = getMousePos(e);
+            const isCropActive = !document.getElementById('tab-crop').classList.contains('hidden');
+
+            if (isCropActive) {
+                let activeTarget = (Core.activeStickerIdx !== -1 && State.stickers[Core.activeStickerIdx]) ? State.stickers[Core.activeStickerIdx] : (Core.images[Core.activeIdx] ? Core.images[Core.activeIdx].ft : null);
+                let sImg = (Core.activeStickerIdx !== -1) ? Core.stickerCache[State.stickers[Core.activeStickerIdx].src] : Core.images[Core.activeIdx];
+
+                if (activeTarget && sImg) {
+                    let aw, ah;
+                    if (Core.activeStickerIdx !== -1) { aw = sImg.width * activeTarget.s; ah = sImg.height * activeTarget.s; }
+                    else { ah = h * 0.4 * activeTarget.s; aw = ah * (sImg.width / sImg.height); }
+
+                    const dx = mx - activeTarget.x, dy = my - activeTarget.y;
+                    const lx = dx * Math.cos(-activeTarget.r) - dy * Math.sin(-activeTarget.r);
+                    const ly = dx * Math.sin(-activeTarget.r) + dy * Math.cos(-activeTarget.r);
+
+                    const box = Core.cropBox;
+                    const bx = -aw/2 + box.x * aw, by = -ah/2 + box.y * ah;
+                    const bw = box.w * aw, bh = box.h * ah;
+                    const cs = Math.max(20, w*0.02);
+
+                    let hitCorner = null;
+                    if (Math.hypot(lx - bx, ly - by) < cs) hitCorner = 'TL';
+                    else if (Math.hypot(lx - (bx+bw), ly - by) < cs) hitCorner = 'TR';
+                    else if (Math.hypot(lx - bx, ly - (by+bh)) < cs) hitCorner = 'BL';
+                    else if (Math.hypot(lx - (bx+bw), ly - (by+bh)) < cs) hitCorner = 'BR';
+
+                    if (hitCorner) {
+                        dragInfo = { active: true, hasMoved: false, mode: 'crop-resize', corner: hitCorner, aw, ah };
+                        return;
+                    } else if (lx >= bx && lx <= bx+bw && ly >= by && ly <= by+bh) {
+                        dragInfo = { active: true, hasMoved: false, mode: 'crop-move', offX: lx - bx, offY: ly - by, aw, ah };
+                        return;
+                    }
+                }
+            }
+
+            let hitSticker = false;
+            let newlySelectedStickerIdx = -1;
 
             for(let i = State.stickers.length - 1; i >= 0; i--) {
                 const stk = State.stickers[i];
-                const tx = (canvas.width * stk.x) / 100, ty = (canvas.height * stk.y) / 100;
-                const sizePx = Math.floor((canvas.height * stk.size) / 500);
-                if(Math.hypot(mx - tx, my - ty) < sizePx) { dragInfo = { active: true, target: 'sticker', index: i }; return; }
+                const sImg = Core.stickerCache[stk.src];
+                if(!sImg) continue;
+
+                const dx = mx - stk.x, dy = my - stk.y;
+                const lx = dx * Math.cos(-stk.r) - dy * Math.sin(-stk.r);
+                const ly = dx * Math.sin(-stk.r) + dy * Math.cos(-stk.r);
+                const aw = sImg.width * stk.s, ah = sImg.height * stk.s;
+
+                if (!isCropActive && Core.activeStickerIdx === i) {
+                    const deleteHit = Math.hypot(lx - aw/2, ly - (-ah/2)) < (Math.max(8, w*0.015)*1.5 + 10);
+                    if (deleteHit) {
+                        pushHistory(); // Guardar historia antes de borrar
+                        State.stickers.splice(i, 1);
+                        Core.activeStickerIdx = -1; Engine.run(); return;
+                    }
+                    if (Math.hypot(lx - 0, ly - (-ah/2 - 40)) < 25) { dragInfo = { active: true, hasMoved: false, mode: 'rotate-stk', initR: stk.r, initAngle: Math.atan2(dy, dx) }; hitSticker = true; newlySelectedStickerIdx = i; break; }
+                    const corners = [ {x: -aw/2, y: -ah/2}, {x: aw/2, y: -ah/2}, {x: -aw/2, y: ah/2}, {x: aw/2, y: ah/2} ];
+                    for (let c of corners) {
+                        if (c.x === aw/2 && c.y === -ah/2) continue;
+                        if (Math.hypot(lx - c.x, ly - c.y) < 25) { dragInfo = { active: true, hasMoved: false, mode: 'scale-stk', initS: stk.s, initDist: Math.hypot(dx, dy) }; hitSticker = true; newlySelectedStickerIdx = i; break; }
+                    }
+                    if(hitSticker) break;
+                }
+                if (lx >= -aw/2 && lx <= aw/2 && ly >= -ah/2 && ly <= ah/2) { newlySelectedStickerIdx = i; dragInfo = { active: true, hasMoved: false, mode: 'move-stk', offX: dx, offY: dy }; hitSticker = true; break; }
             }
 
-            if(State.textOn && State.textStr) {
-                const tx = (canvas.width * State.tx) / 100, ty = (canvas.height * State.ty) / 100;
+            if (Core.activeStickerIdx !== newlySelectedStickerIdx) {
+                Core.activeStickerIdx = newlySelectedStickerIdx;
+                Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI();
+            }
+
+            if(hitSticker && !isCropActive) { Engine.run(); return; }
+
+            if (!hitSticker && State.grid === 'free') {
+                const img = Core.images[Core.activeIdx];
+                if(img && img.ft) {
+                    const dx = mx - img.ft.x, dy = my - img.ft.y;
+                    const lx = dx * Math.cos(-img.ft.r) - dy * Math.sin(-img.ft.r);
+                    const ly = dx * Math.sin(-img.ft.r) + dy * Math.cos(-img.ft.r);
+                    const ah = h * 0.4 * img.ft.s, aw = ah * (img.width / img.height);
+
+                    if (!isCropActive) {
+                        const deleteHit = Math.hypot(lx - aw/2, ly - (-ah/2)) < (Math.max(8, w*0.015)*1.5 + 10);
+                        if (deleteHit) { pushHistory(); Core.images.splice(Core.activeIdx, 1); Core.activeIdx = Core.images.length > 0 ? 0 : -1; Core.cropBox = {x:0, y:0, w:1, h:1}; updateGallery(); Engine.run(); return; }
+                        if (Math.hypot(lx - 0, ly - (-ah/2 - 40)) < 30) { dragInfo = { active: true, hasMoved: false, mode: 'rotate-img', initR: img.ft.r, initAngle: Math.atan2(dy, dx) }; Engine.run(); return; }
+                        const corners = [ {x: -aw/2, y: -ah/2}, {x: aw/2, y: -ah/2}, {x: -aw/2, y: ah/2}, {x: aw/2, y: ah/2} ];
+                        for (let c of corners) {
+                            if (c.x === aw/2 && c.y === -ah/2) continue;
+                            if (Math.hypot(lx - c.x, ly - c.y) < 30) { dragInfo = { active: true, hasMoved: false, mode: 'scale-img', initS: img.ft.s, initDist: Math.hypot(dx, dy) }; Engine.run(); return; }
+                        }
+                    }
+                    if (lx >= -aw/2 && lx <= aw/2 && ly >= -ah/2 && ly <= ah/2) {
+                        dragInfo = { active: true, hasMoved: false, mode: 'move-img', offX: dx, offY: dy }; Engine.run(); return;
+                    }
+                }
+            }
+
+            if(!isCropActive && State.textOn && State.textStr) {
+                const tx = (w * State.tx) / 100, ty = (h * State.ty) / 100;
                 ctx.font = `${State.fSize}px ${State.fontFam}`; 
                 const lines = State.textStr.split('\n');
                 let hit = false;
                 lines.forEach((line, idx) => {
-                    const metrics = ctx.measureText(line);
-                    const lTy = ty + (idx * State.fSize);
+                    const metrics = ctx.measureText(line); const lTy = ty + (idx * State.fSize);
                     if(Math.abs(mx - tx) < metrics.width/2 && my > lTy - State.fSize && my < lTy + State.fSize*0.3) hit = true;
                 });
-                if(hit) { dragInfo = { active: true, target: 'text' }; return; }
+                if(hit) { dragInfo = { active: true, hasMoved: false, mode: 'text' }; Engine.run(); return; }
+            }
+            Engine.run();
+        });
+
+        canvas.addEventListener('pointermove', e => {
+            if(!dragInfo.active) return;
+            
+            // Disparar Undo Historial solo en el primer pixel de movimiento del arrastre
+            if(!dragInfo.hasMoved) {
+                pushHistory();
+                dragInfo.hasMoved = true;
             }
 
-            if(State.grid === 'free') {
-                for(let i = Core.images.length - 1; i >= 0; i--) {
-                    const img = Core.images[i]; if(!img.ft) continue;
-                    const iw = (canvas.height * 0.4) * img.ft.s * (img.width/img.height), ih = canvas.height * 0.4 * img.ft.s;
-                    if(Math.abs(mx - img.ft.x) < iw/2 && Math.abs(my - img.ft.y) < ih/2) {
-                        Core.images.splice(i, 1); Core.images.push(img); dragInfo = { active: true, target: Core.images.length - 1 }; return;
+            const img = Core.images[Core.activeIdx];
+            const { mx, my, w, h } = getMousePos(e);
+
+            if (dragInfo.mode === 'crop-resize') {
+                const { aw, ah, corner } = dragInfo;
+                let activeTarget = (Core.activeStickerIdx !== -1) ? State.stickers[Core.activeStickerIdx] : Core.images[Core.activeIdx].ft;
+                const dx = mx - activeTarget.x, dy = my - activeTarget.y;
+                const lx = dx * Math.cos(-activeTarget.r) - dy * Math.sin(-activeTarget.r);
+                const ly = dx * Math.sin(-activeTarget.r) + dy * Math.cos(-activeTarget.r);
+
+                let nLeft = Core.cropBox.x, nTop = Core.cropBox.y;
+                let nRight = nLeft + Core.cropBox.w, nBottom = nTop + Core.cropBox.h;
+
+                let nx = Math.max(0, Math.min(1, (lx + aw/2)/aw));
+                let ny = Math.max(0, Math.min(1, (ly + ah/2)/ah));
+
+                if (corner === 'TL') { nLeft = nx; nTop = ny; }
+                if (corner === 'TR') { nRight = nx; nTop = ny; }
+                if (corner === 'BL') { nLeft = nx; nBottom = ny; }
+                if (corner === 'BR') { nRight = nx; nBottom = ny; }
+
+                if (nRight - nLeft < 0.05) { if(corner.includes('L')) nLeft = nRight - 0.05; else nRight = nLeft + 0.05; }
+                if (nBottom - nTop < 0.05) { if(corner.includes('T')) nTop = nBottom - 0.05; else nBottom = nTop + 0.05; }
+
+                if (State.cropAspect !== 'free') {
+                    const aspect = parseFloat(State.cropAspect);
+                    let nW = nRight - nLeft, nH = nBottom - nTop;
+                    const targetH = nW * (aw/ah) / aspect;
+                    
+                    if (corner === 'TL' || corner === 'TR') nTop = nBottom - targetH;
+                    else nBottom = nTop + targetH;
+
+                    if (nTop < 0 || nBottom > 1) {
+                        if (nTop < 0) nTop = 0; if (nBottom > 1) nBottom = 1;
+                        nH = nBottom - nTop;
+                        const targetW = nH * (ah/aw) * aspect;
+                        if (corner === 'TL' || corner === 'BL') nLeft = nRight - targetW; else nRight = nLeft + targetW;
                     }
                 }
+                Core.cropBox = { x: nLeft, y: nTop, w: nRight - nLeft, h: nBottom - nTop };
+                Engine.run(); return;
             }
+
+            if (dragInfo.mode === 'crop-move') {
+                const { aw, ah } = dragInfo;
+                let activeTarget = (Core.activeStickerIdx !== -1) ? State.stickers[Core.activeStickerIdx] : Core.images[Core.activeIdx].ft;
+                const dx = mx - activeTarget.x, dy = my - activeTarget.y;
+                const lx = dx * Math.cos(-activeTarget.r) - dy * Math.sin(-activeTarget.r);
+                const ly = dx * Math.sin(-activeTarget.r) + dy * Math.cos(-activeTarget.r);
+
+                let nX = (lx - dragInfo.offX + aw/2)/aw;
+                let nY = (ly - dragInfo.offY + ah/2)/ah;
+
+                nX = Math.max(0, Math.min(1 - Core.cropBox.w, nX));
+                nY = Math.max(0, Math.min(1 - Core.cropBox.h, nY));
+                Core.cropBox.x = nX; Core.cropBox.y = nY;
+                Engine.run(); return;
+            }
+
+            if (!document.getElementById('tab-crop').classList.contains('hidden')) return;
+
+            if (dragInfo.mode === 'move-img') { img.ft.x = mx - dragInfo.offX; img.ft.y = my - dragInfo.offY; } 
+            else if (dragInfo.mode === 'rotate-img') { const angle = Math.atan2(my - img.ft.y, mx - img.ft.x); img.ft.r = dragInfo.initR + (angle - dragInfo.initAngle); } 
+            else if (dragInfo.mode === 'scale-img') { const dist = Math.hypot(mx - img.ft.x, my - img.ft.y); img.ft.s = dragInfo.initS * (dist / dragInfo.initDist); } 
+            else if (dragInfo.mode === 'move-stk') { State.stickers[Core.activeStickerIdx].x = mx - dragInfo.offX; State.stickers[Core.activeStickerIdx].y = my - dragInfo.offY; } 
+            else if (dragInfo.mode === 'rotate-stk') { const angle = Math.atan2(my - State.stickers[Core.activeStickerIdx].y, mx - State.stickers[Core.activeStickerIdx].x); State.stickers[Core.activeStickerIdx].r = dragInfo.initR + (angle - dragInfo.initAngle); } 
+            else if (dragInfo.mode === 'scale-stk') { const dist = Math.hypot(mx - State.stickers[Core.activeStickerIdx].x, my - State.stickers[Core.activeStickerIdx].y); State.stickers[Core.activeStickerIdx].s = dragInfo.initS * (dist / dragInfo.initDist); } 
+            else if(dragInfo.mode === 'text') { State.tx = Math.min(100, Math.max(0, (mx / w) * 100)); State.ty = Math.min(100, Math.max(0, (my / h) * 100)); }
+
+            Engine.run(); 
         });
 
-        canvas.addEventListener('mousemove', e => {
-            if(!dragInfo.active) return;
-            document.getElementById('dragTooltip').style.display = 'block';
-            const rect = canvas.getBoundingClientRect();
-            const mx = (e.clientX - rect.left) * (canvas.width / rect.width), my = (e.clientY - rect.top) * (canvas.height / rect.height);
-            
-            if(dragInfo.target === 'sticker') {
-                State.stickers[dragInfo.index].x = (mx / canvas.width) * 100; State.stickers[dragInfo.index].y = (my / canvas.height) * 100;
-            } else if(dragInfo.target === 'text') {
-                State.tx = Math.min(100, Math.max(0, (mx / canvas.width) * 100)); State.ty = Math.min(100, Math.max(0, (my / canvas.height) * 100));
-            } else if(typeof dragInfo.target === 'number') {
-                Core.images[dragInfo.target].ft.x = mx; Core.images[dragInfo.target].ft.y = my;
-            }
-            Engine.run(true); 
-        });
-
-        canvas.addEventListener('wheel', e => {
-            if(!dragInfo.active) return;
-            e.preventDefault();
-            const delta = e.deltaY < 0 ? 1.05 : 0.95;
-            
-            if(dragInfo.target === 'sticker') {
-                State.stickers[dragInfo.index].size *= delta; updateStickersUI();
-            } else if(typeof dragInfo.target === 'number') {
-                Core.images[dragInfo.target].ft.s *= delta;
-            } else if(dragInfo.target === 'text') {
-                State.fSize *= delta;
-                document.getElementById('s_fsize').value = State.fSize;
-                document.getElementById('s_fsize_txt').value = Math.round(State.fSize);
-            }
-            Engine.run(true);
-        }, { passive: false });
-
-        const stopDrag = () => { if(dragInfo.active){ dragInfo.active = false; document.getElementById('dragTooltip').style.display = 'none'; pushHistory(); Engine.run(); } };
-        canvas.addEventListener('mouseup', stopDrag); canvas.addEventListener('mouseleave', stopDrag);
+        const stopDrag = () => { if(dragInfo.active){ dragInfo.active = false; } };
+        canvas.addEventListener('pointerup', stopDrag); 
+        canvas.addEventListener('pointerleave', stopDrag);
+        canvas.addEventListener('pointercancel', stopDrag);
 
         const Engine = {
-            undo: () => { if(Core.history.length > 0) { State = Core.history.pop(); syncUI(); Engine.run(); } },
+            undo: () => {
+                if(Core.history.length > 0) {
+                    const prevState = Core.history.pop();
+                    
+                    if (prevState.__imgTransforms) {
+                        Core.images.forEach((img, i) => {
+                            if (prevState.__imgTransforms[i]) img.ft = { ...prevState.__imgTransforms[i] };
+                        });
+                        delete prevState.__imgTransforms;
+                    }
+                    if (prevState.__cropBox) {
+                        Core.cropBox = { ...prevState.__cropBox };
+                        delete prevState.__cropBox;
+                    }
+                    
+                    State = prevState;
+                    syncUI(); Engine.run();
+                }
+            },
 
-            run: (fastMode = false) => {
+            setZoom: (delta, exact = null) => {
+                if (exact !== null) {
+                    Core.zoom = exact;
+                } else {
+                    if (Core.zoom === 0) Core.zoom = 1;
+                    Core.zoom += delta;
+                    if (Core.zoom < 0.1) Core.zoom = 0.1;
+                    if (Core.zoom > 5) Core.zoom = 5;
+                }
+                document.getElementById('zoomTxt').innerText = Core.zoom === 0 ? 'FIT' : Math.round(Core.zoom * 100) + '%';
+                Engine.run(true);
+            },
+
+            searchStickers: async () => {
+                const q = document.getElementById('stk_search').value.trim();
+                if(!q) return;
+                const resDiv = document.getElementById('stk_results');
+                resDiv.innerHTML = '<div style="grid-column: span 4; text-align:center; padding: 20px; font-weight:bold;">Searching Wikipedia... ⏳</div>';
+
+                try {
+                    let urls = [];
+                    const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(q)}&gsrlimit=40&prop=imageinfo&iiprop=url&iiurlwidth=400`);
+                    const json = await res.json();
+                    
+                    if (json.query && json.query.pages) {
+                        Object.values(json.query.pages).forEach(p => {
+                            if (p.imageinfo && p.imageinfo[0]) {
+                                let imgUrl = p.imageinfo[0].thumburl || p.imageinfo[0].url;
+                                if(imgUrl && imgUrl.match(/\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i)){
+                                    urls.push(imgUrl);
+                                }
+                            }
+                        });
+                    }
+
+                    resDiv.innerHTML = '';
+                    if (urls.length === 0) {
+                        resDiv.innerHTML = '<div style="grid-column: span 4; text-align:center; padding: 20px; color:#800000; font-weight:bold;">No results. Try another keyword.</div>';
+                        return;
+                    }
+
+                    urls.forEach(u => {
+                        const img = document.createElement('img');
+                        img.crossOrigin = "anonymous";
+                        img.src = u;
+
+                        img.onerror = () => {
+                            if (!img.src.includes('allorigins')) {
+                                img.src = `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+                            } else {
+                                img.style.display = 'none';
+                            }
+                        };
+
+                        img.onclick = () => Engine.addSticker(img.src);
+                        resDiv.appendChild(img);
+                    });
+
+                } catch (e) {
+                    console.error(e);
+                    resDiv.innerHTML = '<div style="grid-column: span 4; text-align:center; padding: 20px; color:#800000; font-weight:bold;">Connection error with Wikipedia.</div>';
+                }
+            },
+
+            addSticker: (url) => {
+                const { w, h } = getLogicalDims();
+                if(!Core.stickerCache[url]) {
+                    const img = new Image(); 
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => {
+                        Core.stickerCache[url] = img; pushHistory();
+                        State.stickers.push({ src: url, x: w/2, y: h/2, s: 1, r: 0 }); 
+                        Core.activeStickerIdx = State.stickers.length - 1; 
+                        Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI();
+                        Engine.run();
+                    }; 
+                    img.src = url;
+                } else {
+                    pushHistory(); State.stickers.push({ src: url, x: w/2, y: h/2, s: 1, r: 0 });
+                    Core.activeStickerIdx = State.stickers.length - 1; 
+                    Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI();
+                    Engine.run();
+                }
+            },
+
+            applyCrop: () => {
+                const isSticker = Core.activeStickerIdx !== -1;
+                const targetObj = isSticker ? State.stickers[Core.activeStickerIdx] : Core.images[Core.activeIdx];
+                if (!targetObj) return;
+
+                const sImg = isSticker ? Core.stickerCache[targetObj.src] : targetObj;
+                const box = Core.cropBox;
+
+                if (box.x === 0 && box.y === 0 && box.w === 1 && box.h === 1) return;
+
+                const c = document.createElement('canvas');
+                c.width = sImg.width * box.w;
+                c.height = sImg.height * box.h;
+                const cCtx = c.getContext('2d');
+
+                cCtx.drawImage(sImg, -sImg.width * box.x, -sImg.height * box.y);
+
+                const newImg = new Image();
+                newImg.crossOrigin = "anonymous";
+                newImg.onload = () => {
+                    pushHistory();
+                    if (isSticker) {
+                        const newUrl = c.toDataURL('image/png');
+                        Core.stickerCache[newUrl] = newImg;
+                        targetObj.src = newUrl;
+                    } else {
+                        newImg.ft = { ...targetObj.ft };
+                        Core.images[Core.activeIdx] = newImg;
+                    }
+                    Core.cropBox = { x: 0, y: 0, w: 1, h: 1 };
+                    State.cropAspect = 'free';
+                    syncUI(); Engine.run(); updateGallery();
+                };
+                newImg.src = c.toDataURL('image/png');
+            },
+
+            bakeBase: () => {
+                if (Core.activeStickerIdx !== -1 && State.stickers[Core.activeStickerIdx]) {
+                    const stk = State.stickers[Core.activeStickerIdx];
+                    const origImg = Core.stickerCache[stk.src];
+                    
+                    const c = document.createElement('canvas');
+                    c.width = origImg.width; c.height = origImg.height;
+                    const cCtx = c.getContext('2d', { willReadFrequently: true });
+                    cCtx.drawImage(origImg, 0, 0);
+
+                    let idata = cCtx.getImageData(0, 0, c.width, c.height);
+                    Engine.computeShaders(idata, c.width, c.height);
+                    cCtx.putImageData(idata, 0, 0);
+
+                    const newImg = new Image();
+                    newImg.crossOrigin = "anonymous";
+                    newImg.onload = () => {
+                        const newUrl = c.toDataURL('image/png');
+                        Core.stickerCache[newUrl] = newImg;
+                        stk.src = newUrl;
+                        State.color = 'none'; State.exp = 0; State.cont = 0; State.intensity = 100;
+                        State.shader = 'none'; State.sInt = 100; State.noise = false; 
+                        State.vignette = false; State.rgbSplit = 0; State.noiseAmt = 40; State.noiseSize = 1;
+                        syncUI(); Engine.run();
+                    };
+                    newImg.src = c.toDataURL('image/png');
+                    return;
+                }
+
+                if (Core.activeIdx === -1 || !Core.images[Core.activeIdx]) return;
+                const origImg = Core.images[Core.activeIdx];
+
+                const c = document.createElement('canvas');
+                c.width = origImg.width; c.height = origImg.height;
+                const cCtx = c.getContext('2d', { willReadFrequently: true });
+                cCtx.drawImage(origImg, 0, 0);
+
+                let idata = cCtx.getImageData(0, 0, c.width, c.height);
+                Engine.computeShaders(idata, c.width, c.height);
+                cCtx.putImageData(idata, 0, 0);
+
+                const newImg = new Image();
+                newImg.onload = () => {
+                    newImg.ft = { x: origImg.ft.x, y: origImg.ft.y, r: origImg.ft.r, s: origImg.ft.s };
+                    Core.images[Core.activeIdx] = newImg;
+                    State.color = 'none'; State.exp = 0; State.cont = 0; State.intensity = 100;
+                    State.shader = 'none'; State.sInt = 100; State.noise = false; 
+                    State.vignette = false; State.rgbSplit = 0; State.noiseAmt = 40; State.noiseSize = 1;
+                    syncUI(); Engine.run(); updateGallery();
+                };
+                newImg.src = c.toDataURL('image/png');
+            },
+
+            bakeFlat: () => {
+                if (Core.activeIdx === -1) return;
+                Engine.run(false, true, (dataUrl) => {
+                    try {
+                        const img = new Image();
+                        img.onload = () => {
+                            Core.images[Core.activeIdx] = img; 
+                            State = defaultState(); 
+                            Core.bgImg = null; 
+                            Core.activeStickerIdx = -1;
+
+                            const dims = getLogicalDims();
+                            img.ft = { x: dims.w/2, y: dims.h/2, r: 0, s: 2.5 }; 
+
+                            syncUI(); Engine.run(); updateGallery();
+                        };
+                        img.src = dataUrl;
+                    } catch (err) {
+                        alert("CORS security error during bake. The external image blocked export.");
+                        canvas.classList.remove('hidden');
+                    }
+                });
+            },
+
+            run: (fastMode = false, forExport = false, onComplete = null) => {
                 const eTxt = document.getElementById('emptyText');
                 if (Core.activeIdx === -1 || !Core.images[Core.activeIdx]) { canvas.classList.add('hidden'); eTxt.style.display = 'block'; return; }
                 canvas.classList.remove('hidden'); eTxt.style.display = 'none';
 
-                let w = State.res, h = State.res;
-                if (State.grid === '1' || State.grid === 'free' || State.grid === 'photobooth') {
-                    const ratio = Core.images[Core.activeIdx].width / Core.images[Core.activeIdx].height;
-                    if (ratio > 1) h = Math.round(State.res / ratio); else w = Math.round(State.res * ratio);
-                } else h = Math.round(State.res / State.aspect);
+                const { w, h } = getLogicalDims();
 
                 const buf = document.createElement('canvas'); buf.width = w; buf.height = h;
                 const bCtx = buf.getContext('2d', { willReadFrequently: true });
                 bCtx.fillStyle = State.bgColor; bCtx.fillRect(0, 0, w, h);
 
+                if (Core.bgImg) {
+                    const rI = Core.bgImg.width/Core.bgImg.height, rC = w/h;
+                    let sx = 0, sy = 0, sw = Core.bgImg.width, sh = Core.bgImg.height;
+                    if(rI > rC) { sw = sh * rC; sx = (Core.bgImg.width - sw)/2; } else { sh = sw / rC; sy = (Core.bgImg.height - sh)/2; }
+                    bCtx.drawImage(Core.bgImg, sx, sy, sw, sh, 0, 0, w, h);
+                }
+
                 Engine.drawCollageGrid(bCtx, w, h);
+
+                State.stickers.forEach((stk) => {
+                    const sImg = Core.stickerCache[stk.src]; if(!sImg) return;
+                    bCtx.save(); bCtx.translate(stk.x, stk.y); bCtx.rotate(stk.r);
+                    const aw = sImg.width * stk.s, ah = sImg.height * stk.s;
+                    bCtx.drawImage(sImg, -aw/2, -ah/2, aw, ah); bCtx.restore();
+                });
 
                 if(!fastMode && (State.color !== 'none' || State.shader !== 'none' || State.exp !== 0 || State.cont !== 0 || State.noise || State.vignette || State.rgbSplit > 0)) {
                     let idata = bCtx.getImageData(0, 0, w, h); Engine.computeShaders(idata, w, h); bCtx.putImageData(idata, 0, 0);
                 }
 
-                if(fastMode) {
-                    canvas.width = w; canvas.height = h; ctx.imageSmoothingEnabled = true; ctx.drawImage(buf, 0, 0); Engine.drawOverlays(ctx, w, h); return;
+                const cmp = new Image();
+                try {
+                    const dataUrl = buf.toDataURL('image/jpeg', State.jpeg / 100);
+
+                    cmp.onload = () => {
+                        const pixCanvas = document.createElement('canvas');
+                        const pCtx = pixCanvas.getContext('2d');
+                        if (State.pixelSize > 1) { 
+                            pixCanvas.width = Math.max(1, Math.floor(w/State.pixelSize)); 
+                            pixCanvas.height = Math.max(1, Math.floor(h/State.pixelSize)); 
+                            pCtx.imageSmoothingEnabled = false; 
+                        } else { 
+                            pixCanvas.width = w; 
+                            pixCanvas.height = h; 
+                            pCtx.imageSmoothingEnabled = true; 
+                        }
+                        pCtx.drawImage(cmp, 0, 0, pixCanvas.width, pixCanvas.height);
+
+                        const fBuf = document.createElement('canvas'); 
+                        fBuf.width = w; fBuf.height = h; 
+                        const fCtx = fBuf.getContext('2d');
+                        fCtx.imageSmoothingEnabled = (State.pixelSize === 1); 
+                        fCtx.drawImage(pixCanvas, 0, 0, w, h);
+
+                        Engine.drawOverlays(fCtx, w, h); 
+
+                        // Si es para Exportar, no añadimos padding visual, devolvemos la imagen limpia.
+                        if (forExport) {
+                            if (onComplete) onComplete(fBuf.toDataURL('image/png'));
+                            return;
+                        }
+
+                        // Renderizado de UI con Padding para comodidad
+                        const PAD = Core.PAD;
+                        canvas.width = w + PAD * 2;
+                        canvas.height = h + PAD * 2;
+                        
+                        ctx.clearRect(0, 0, canvas.width, canvas.height); // Fondo transparente
+                        
+                        ctx.save();
+                        ctx.translate(PAD, PAD);
+                        
+                        // Sombra de lienzo
+                        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+                        ctx.shadowBlur = 15;
+                        ctx.shadowOffsetX = 5;
+                        ctx.shadowOffsetY = 5;
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.shadowColor = 'transparent';
+                        
+                        ctx.drawImage(fBuf, 0, 0);
+
+                        const isCropActive = !document.getElementById('tab-crop').classList.contains('hidden');
+                        if (isCropActive) Engine.drawCropBox(ctx, w, h);
+                        else Engine.drawTransformBox(ctx, w, h);
+
+                        ctx.restore();
+
+                        if (Core.zoom === 0) {
+                            canvas.style.maxWidth = '100%';
+                            canvas.style.maxHeight = '100%';
+                            canvas.style.width = 'auto';
+                            canvas.style.height = 'auto';
+                        } else {
+                            canvas.style.maxWidth = 'none';
+                            canvas.style.maxHeight = 'none';
+                            canvas.style.width = ((w + PAD * 2) * Core.zoom) + 'px';
+                            canvas.style.height = ((h + PAD * 2) * Core.zoom) + 'px';
+                        }
+
+                        if(onComplete) onComplete();
+                    };
+                    cmp.src = dataUrl;
+
+                } catch (e) {
+                    if(onComplete) onComplete(); 
+                }
+            },
+
+            drawCropBox: (ctx, w, h) => {
+                let activeTarget = null, isSticker = false, sImg = null;
+                if (Core.activeStickerIdx !== -1 && State.stickers[Core.activeStickerIdx]) {
+                    activeTarget = State.stickers[Core.activeStickerIdx];
+                    sImg = Core.stickerCache[activeTarget.src];
+                    isSticker = true;
+                } else if (Core.activeIdx !== -1 && Core.images[Core.activeIdx]) {
+                    activeTarget = Core.images[Core.activeIdx].ft;
+                    sImg = Core.images[Core.activeIdx];
+                }
+                if (!activeTarget || !sImg) return;
+
+                let aw, ah;
+                if (isSticker) { aw = sImg.width * activeTarget.s; ah = sImg.height * activeTarget.s; }
+                else { ah = h * 0.4 * activeTarget.s; aw = ah * (sImg.width / sImg.height); }
+
+                ctx.save(); ctx.translate(activeTarget.x, activeTarget.y); ctx.rotate(activeTarget.r);
+
+                const box = Core.cropBox;
+                const bx = -aw/2 + box.x * aw, by = -ah/2 + box.y * ah;
+                const bw = box.w * aw, bh = box.h * ah;
+
+                ctx.fillStyle = 'rgba(0,0,0,0.65)';
+                ctx.fillRect(-aw/2, -ah/2, aw, by - (-ah/2)); // Top
+                ctx.fillRect(-aw/2, by + bh, aw, ah/2 - (by + bh)); // Bottom
+                ctx.fillRect(-aw/2, by, bx - (-aw/2), bh); // Left
+                ctx.fillRect(bx + bw, by, aw/2 - (bx + bw), bh); // Right
+
+                ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+                ctx.strokeRect(bx, by, bw, bh); ctx.setLineDash([]);
+
+                ctx.fillStyle = '#00ff00';
+                const cs = Math.max(10, w*0.015);
+                ctx.fillRect(bx - cs/2, by - cs/2, cs, cs);
+                ctx.fillRect(bx + bw - cs/2, by - cs/2, cs, cs);
+                ctx.fillRect(bx - cs/2, by + bh - cs/2, cs, cs);
+                ctx.fillRect(bx + bw - cs/2, by + bh - cs/2, cs, cs);
+
+                ctx.restore();
+            },
+
+            drawTransformBox: (ctx, w, h) => {
+                let target = null, aw, ah;
+
+                if (Core.activeStickerIdx !== -1 && State.stickers[Core.activeStickerIdx]) {
+                    const stk = State.stickers[Core.activeStickerIdx];
+                    const sImg = Core.stickerCache[stk.src];
+                    if(sImg) { target = stk; aw = sImg.width * stk.s; ah = sImg.height * stk.s; }
+                } else if (State.grid === 'free' && Core.activeIdx !== -1) {
+                    const img = Core.images[Core.activeIdx];
+                    if(img && img.ft) { target = img.ft; ah = h * 0.4 * img.ft.s; aw = ah * (img.width / img.height); }
                 }
 
-                const cmp = new Image();
-                cmp.onload = () => {
-                    if (State.pixelSize > 1) { canvas.width = Math.max(1, Math.floor(w/State.pixelSize)); canvas.height = Math.max(1, Math.floor(h/State.pixelSize)); ctx.imageSmoothingEnabled = false; } 
-                    else { canvas.width = w; canvas.height = h; ctx.imageSmoothingEnabled = true; }
-                    ctx.drawImage(cmp, 0, 0, canvas.width, canvas.height);
-                    
-                    const fBuf = document.createElement('canvas'); fBuf.width = w; fBuf.height = h; const fCtx = fBuf.getContext('2d');
-                    fCtx.imageSmoothingEnabled = (State.pixelSize === 1); fCtx.drawImage(canvas, 0, 0, w, h);
-                    Engine.drawOverlays(fCtx, w, h); canvas.width = w; canvas.height = h; ctx.drawImage(fBuf, 0, 0);
-                };
-                cmp.src = buf.toDataURL('image/jpeg', State.jpeg / 100);
+                if(!target) return;
+
+                ctx.save(); ctx.translate(target.x, target.y); ctx.rotate(target.r);
+                ctx.strokeStyle = Core.activeStickerIdx !== -1 ? '#ff00ff' : '#00ffff'; 
+                ctx.lineWidth = Math.max(2, w*0.003); ctx.setLineDash([8, 8]);
+                ctx.strokeRect(-aw/2, -ah/2, aw, ah); ctx.setLineDash([]);
+
+                const bs = Math.max(8, w*0.015);
+                ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+                [ {x:-aw/2, y:-ah/2}, {x:aw/2, y:-ah/2}, {x:-aw/2, y:ah/2}, {x:aw/2, y:ah/2} ].forEach(c => {
+                    if(c.x === aw/2 && c.y === -ah/2) return;
+                    ctx.fillRect(c.x - bs/2, c.y - bs/2, bs, bs); 
+                    ctx.strokeRect(c.x - bs/2, c.y - bs/2, bs, bs);
+                });
+
+                const btnRadius = bs * 1.2;
+                ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(aw/2, -ah/2, btnRadius, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+                ctx.fillStyle = '#ffffff'; ctx.font = `bold ${bs*1.5}px Tahoma`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('X', aw/2, -ah/2 + 1);
+
+                ctx.beginPath(); ctx.moveTo(0, -ah/2); ctx.lineTo(0, -ah/2 - (bs*3)); ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, -ah/2 - (bs*3), bs*0.8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                ctx.restore();
             },
 
             drawCollageGrid: (ctx, w, h) => {
@@ -658,34 +1261,20 @@
                 const imgs = Core.images, p = State.pad, active = imgs[Core.activeIdx];
                 const getI = (i) => imgs[i] || active;
 
-                if (State.grid === '1') drawC(active, 0, 0, w, h);
-                else if (State.grid === 'free') {
+                if (State.grid === 'free') {
                     imgs.forEach(img => {
-                        if(!img.ft) img.ft = { x: w/2 + (Math.random()*40-20), y: h/2 + (Math.random()*40-20), r: 0, s: 1 };
+                        if(!img.ft) img.ft = { x: w/2, y: h/2, r: 0, s: 2.5 };
                         ctx.save(); ctx.translate(img.ft.x, img.ft.y); ctx.rotate(img.ft.r);
                         const ih = h*0.4 * img.ft.s, iw = ih * (img.width/img.height);
-                        ctx.drawImage(img, -iw/2, -ih/2, iw, ih); ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.strokeRect(-iw/2, -ih/2, iw, ih); ctx.restore();
+                        ctx.drawImage(img, -iw/2, -ih/2, iw, ih); ctx.restore();
                     });
                 }
-                else if (State.grid === 'photobooth') {
-                    const n = Math.max(1, imgs.length);
-                    const ch = (h - p * (n + 1)) / n;
-                    const cw = w - p * 2;
-                    for(let i=0; i<n; i++) drawC(getI(i), p, p + i*(ch+p), cw, ch);
-                }
+                else if (State.grid === 'photobooth') { const n = Math.max(1, imgs.length); const ch = (h - p * (n + 1)) / n; const cw = w - p * 2; for(let i=0; i<n; i++) drawC(getI(i), p, p + i*(ch+p), cw, ch); }
                 else if (State.grid === '2h') { const cw = (w-p*3)/2, ch = h-p*2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p*2+cw, p, cw, ch); } 
                 else if (State.grid === '2v') { const cw = w-p*2, ch = (h-p*3)/2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p, p*2+ch, cw, ch); } 
                 else if (State.grid === '4') { const cw = (w-p*3)/2, ch = (h-p*3)/2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p*2+cw, p, cw, ch); drawC(getI(2), p, p*2+ch, cw, ch); drawC(getI(3), p*2+cw, p*2+ch, cw, ch); } 
                 else if (State.grid === '3v') { const cw = (w-p*4)/3, ch = h-p*2; drawC(getI(0), p, p, cw, ch); drawC(getI(1), p*2+cw, p, cw, ch); drawC(getI(2), p*3+cw*2, p, cw, ch); } 
                 else if (State.grid === '9') { const cw = (w-p*4)/3, ch = (h-p*4)/3; for(let r=0;r<3;r++){ for(let c=0;c<3;c++){ drawC(getI(r*3+c), p+c*(cw+p), p+r*(ch+p), cw, ch); } } } 
-                else if (State.grid === 'picnic') {
-                    for(let i=0; i<Math.max(4, imgs.length); i++) {
-                        ctx.save(); ctx.translate(w/2 + (Math.sin(i*2)*w*0.25), h/2 + (Math.cos(i*2)*h*0.25)); ctx.rotate((i - 2)*0.15);
-                        const ih = h*0.4, iw = ih * (getI(i).width/getI(i).height);
-                        ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowBlur=12; ctx.drawImage(getI(i), -iw/2, -ih/2, iw, ih); 
-                        ctx.strokeStyle='#fff'; ctx.lineWidth=p; ctx.strokeRect(-iw/2, -ih/2, iw, ih); ctx.restore();
-                    }
-                }
             },
 
             computeShaders: (imgData, w, h) => {
@@ -702,7 +1291,7 @@
 
                 for (let i = 0; i < d.length; i += 4) {
                     let r = d[i], g = d[i+1], b = d[i+2]; 
-                    
+
                     r = cont*(r-128)+128+exp; g = cont*(g-128)+128+exp; b = cont*(b-128)+128+exp;
                     let rb=r, gb=g, bb=b;
 
@@ -725,11 +1314,7 @@
                     let rb_s=r, gb_s=g, bb_s=b;
 
                     let y = Math.floor((i / 4) / w), x = (i / 4) % w;
-                    if(State.shader === 'glitch') { if(Math.random()>0.995){ let sx = (x+Math.floor(Math.random()*50))%w; let idx = (y*w+sx)*4; r=src[idx];g=src[idx+1];b=src[idx+2]; } }
-                    else if(State.shader === 'ripple') { let sx = Math.floor(x + Math.sin(y/10)*10); if(sx>=0 && sx<w){ let idx = (y*w+sx)*4; r=src[idx];g=src[idx+1];b=src[idx+2]; } }
-                    else if(State.shader === 'emboss') { if(i>4 && y>0){ let pr = src[i-w*4-4]; r = 128 + (r-pr)*2; g=b=r; } }
-                    else if(State.shader === 'edge') { if(i>4){ let pr=src[i-4], pg=src[i-3], pb=src[i-2]; let diff = Math.abs(r-pr)+Math.abs(g-pg)+Math.abs(b-pb); r=g=b=diff*2; } }
-                    else if (State.shader === 'gameboy') { let l=r*0.3+g*0.59+b*0.11; if(l<64){r=15;g=56;b=15;} else if(l<128){r=48;g=98;b=48;} else if(l<192){r=139;g=172;b=15;} else{r=155;g=188;b=15;} if((x+y)%2===0){r*=0.9;g*=0.9;b*=0.9;} }
+                    if (State.shader === 'gameboy') { let l=r*0.3+g*0.59+b*0.11; if(l<64){r=15;g=56;b=15;} else if(l<128){r=48;g=98;b=48;} else if(l<192){r=139;g=172;b=15;} else{r=155;g=188;b=15;} if((x+y)%2===0){r*=0.9;g*=0.9;b*=0.9;} }
                     else if (State.shader === 'frutiger') { r*=0.8; g=Math.min(255, g*1.3+40); b=Math.min(255, b*1.4+50); if(y%4===0){r+=10;g+=10;b+=10;} }
                     else if (State.shader === 'analog') { let l=r*0.3+g*0.59+b*0.11; r=Math.min(255, l*1.5+40); g=l*0.7; b=l*0.7; if(y%2===0){r*=0.9;g*=0.9;b*=0.9;} if(Math.random()>0.9){r=Math.min(255,r+50);} }
                     else if (State.shader === 'liminal') { let l=r*0.3+g*0.59+b*0.11; r=r*0.7+l*0.3+30; g=g*0.7+l*0.3+30; b=b*0.5+l*0.2; }
@@ -743,7 +1328,7 @@
                     else if (State.shader === 'nokia') { r=(r&0b11000000); g=Math.min(255, (g&0b11100000)+60); b=(b&0b11000000); }
                     else if (State.shader === 'cga') { let l=r*0.3+g*0.59+b*0.11; if(l<64){r=g=b=0;} else if(l<128){r=0;g=170;b=170;} else if(l<192){r=170;g=0;b=170;} else{r=g=b=255;} }
                     else if (State.shader === 'invert') { r=255-r; g=255-g; b=255-b; }
-                    else if (State.shader === 'ascii') { let l=Math.round((r*0.3+g*0.59+b*0.11)/32)*32; r=g=b=l; if((x%4===0)||(y%4===0)){r=g=b=0;} }
+                    else if (State.shader === 'edge') { if(i>4){ let pr=src[i-4], pg=src[i-3], pb=src[i-2]; let diff = Math.abs(r-pr)+Math.abs(g-pg)+Math.abs(b-pb); r=g=b=diff*2; } }
 
                     r = rb_s + (r - rb_s)*sIntFactor; g = gb_s + (g - gb_s)*sIntFactor; b = bb_s + (b - bb_s)*sIntFactor;
 
@@ -774,20 +1359,7 @@
                 const fSub = State.frameSub;
                 const fc = State.frameColor;
                 const ff = State.frameFont;
-                
-                State.stickers.forEach(stk => {
-                    ctx.save();
-                    ctx.translate((w * stk.x) / 100, (h * stk.y) / 100); ctx.rotate(stk.rot * Math.PI / 180);
-                    const sSize = Math.floor((h * stk.size) / 500);
-                    ctx.font = `${sSize}px "Courier Prime", monospace`; 
-                    ctx.fillStyle = stk.color || '#ffffff';
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    const lines = stk.text.split('\n');
-                    const startY = -((lines.length - 1) * sSize) / 2;
-                    lines.forEach((line, idx) => { ctx.fillText(line, 0, startY + (idx * sSize)); });
-                    ctx.restore();
-                });
-                
+
                 const drawBottomText = (yPos = h - 10, overColor = fc, font = `bold ${fSize}px ${ff}`, stroke = '#000') => {
                     if(!State.frameBotOn || !fSub) return;
                     ctx.font = font; ctx.fillStyle = overColor; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
@@ -835,30 +1407,27 @@
                 else if (s === 'win98') { ctx.fillStyle = '#c0c0c0'; ctx.fillRect(0, 0, w, 24); ctx.fillStyle = '#000080'; ctx.fillRect(2, 2, w-4, 20); ctx.fillStyle = 'white'; ctx.font = 'bold 14px Tahoma'; ctx.textAlign='left'; ctx.fillText(fTitle || 'Image.jpg', 6, 17); ctx.strokeStyle = '#dfdfdf'; ctx.lineWidth = 2; ctx.strokeRect(1, 1, w-2, h-2); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
                 else if (s === 'macos') { ctx.fillStyle = '#e0e0e0'; ctx.fillRect(0, 0, w, 24); ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, w, h); for(let i=4; i<20; i+=2) { ctx.beginPath(); ctx.moveTo(10, i); ctx.lineTo(w-10, i); ctx.stroke(); } ctx.fillStyle = '#e0e0e0'; ctx.fillRect(w/2 - 50, 2, 100, 20); ctx.fillStyle = 'black'; ctx.font = '12px Arial'; ctx.textAlign = 'center'; ctx.fillText(fTitle || 'Picture 1', w/2, 17); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
                 else if (s === 'tv') { ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); const r = Math.min(w,h)*0.1; const pad = Math.min(w,h)*0.05; ctx.moveTo(pad+r, pad); ctx.lineTo(w-pad-r, pad); ctx.quadraticCurveTo(w-pad, pad, w-pad, pad+r); ctx.lineTo(w-pad, h-pad-r); ctx.quadraticCurveTo(w-pad, h-pad, w-pad-r, h-pad); ctx.lineTo(pad+r, h-pad); ctx.quadraticCurveTo(pad, h-pad, pad, h-pad-r); ctx.lineTo(pad, pad+r); ctx.quadraticCurveTo(pad, pad, pad+r, pad); ctx.closePath(); ctx.fill("evenodd"); drawBottomText(h - pad - 10, fc, `bold ${fSize}px ${ff}`, 'none'); }
-                else if (s === 'browser') { ctx.fillStyle = '#dfdfdf'; ctx.fillRect(0,0,w,40); ctx.fillStyle='#000080'; ctx.fillRect(0,0,w,18); ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.textAlign='left'; ctx.fillText('Microsoft Internet Explorer', 5, 12); ctx.fillStyle='#fff'; ctx.fillRect(5, 22, w-10, 14); ctx.fillStyle='#000'; ctx.fillText(fTitle || 'http://www.picsos.com', 8, 33); ctx.strokeStyle='#808080'; ctx.strokeRect(5,22,w-10,14); ctx.strokeRect(0,0,w,h); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
-                else if (s === 'viewmaster') { ctx.fillStyle = '#000'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.arc(w/2, h/2, Math.min(w,h)*0.48, 0, Math.PI*2, true); ctx.closePath(); ctx.fill("evenodd"); drawBottomText(h-10, fc, `bold ${fSize}px ${ff}`); }
-                else if (s === 'desktop') { ctx.fillStyle = '#008080'; ctx.fillRect(0,0,w,h); const bw=w*0.8, bh=h*0.8; ctx.drawImage(canvas, (w-bw)/2, (h-bh)/2, bw, bh); ctx.fillStyle='#c0c0c0'; ctx.fillRect(0,h-30,w,30); ctx.fillStyle='#dfdfdf'; ctx.fillRect(2,h-28,60,26); ctx.fillStyle='#000'; ctx.font='bold 12px Arial'; ctx.textAlign='center'; ctx.fillText('Start', 32, h-10); drawBottomText(h-40, fc, `bold ${fSize}px ${ff}`); }
                 else if (s === 'vhs_hud') { ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='left'; ctx.fillText('PLAY ►', 20, fSize+10); ctx.fillText('SP', 20, fSize*2+10); if(fTitle){ ctx.textAlign='right'; ctx.fillStyle=fc; ctx.fillText(fTitle, w-20, 40); } drawBottomText(h - 30, fc, `bold ${fSize}px ${ff}`, 'none'); }
-                else if (s === 'gb_border') { const p = Math.floor(w*0.05); ctx.fillStyle='#5b5c5e'; ctx.fillRect(0,0,w,p); ctx.fillRect(0,0,p,h); ctx.fillRect(w-p,0,p,h); ctx.fillRect(0,h-p,w,p); ctx.fillStyle=fc; ctx.font=`italic bold ${Math.floor(p*0.5)}px ${ff}`; ctx.textAlign='center'; ctx.fillText(fTitle || 'DOT MATRIX WITH STEREO SOUND', w/2, p*0.7); drawBottomText(h - p*0.3, fc, `italic bold ${Math.floor(p*0.5)}px ${ff}`, 'none'); }
-                else if (s === 'cyber') { ctx.strokeStyle='#0ff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(w/2, h/2, Math.min(w,h)*0.3, 0, Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(w/2-20, h/2); ctx.lineTo(w/2+20, h/2); ctx.moveTo(w/2, h/2-20); ctx.lineTo(w/2, h/2+20); ctx.stroke(); if(fTitle){ ctx.fillStyle=fc; ctx.font=`${fSize*0.5}px Courier`; ctx.textAlign='left'; ctx.fillText('TARGET: '+fTitle, 20, 30); ctx.fillText('SYS.ON', 20, 45); } drawBottomText(h - 20, fc, `bold ${fSize*0.8}px Courier`, 'none'); }
-                else if (s === 'warning') { const p = Math.floor(h*0.1); ctx.fillStyle='#ffd700'; ctx.fillRect(0,h-p,w,p); ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='center'; ctx.fillText('! WARNING: ' + (fTitle || 'RESTRICTED AREA'), w/2, h-p*0.3); drawBottomText(h - p - 10, fc, `bold ${fSize}px ${ff}`, 'none'); }
-                else if (s === 'wanted') { const p = Math.floor(w * 0.08); ctx.fillStyle = '#d4c3a3'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*1.5, w, p*1.5); ctx.strokeStyle = '#4a2f1d'; ctx.lineWidth = 4; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle=fc; ctx.font=`bold ${fSize*1.5}px ${ff}`; ctx.textAlign='center'; ctx.fillText('WANTED', w/2, p*0.8); ctx.font=`bold ${fSize*0.8}px ${ff}`; ctx.fillText(fTitle || 'REWARD: $5,000', w/2, h - p*0.5); drawBottomText(h - p*0.1, fc, `bold ${fSize*0.5}px ${ff}`, 'none'); }
-                else if (s === 'love') { const p = Math.floor(w * 0.05); ctx.strokeStyle = '#ff69b4'; ctx.lineWidth = p; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle=fc; ctx.font=`bold ${fSize*1.2}px ${ff}`; ctx.textAlign='center'; ctx.fillText('♥♥♥ ' + (fTitle || 'BFFs') + ' ♥♥♥', w/2, p*1.5); drawBottomText(h - p*0.2, fc, `bold ${fSize}px ${ff}`); }
-                else if (s === 'myspace') { const p = Math.floor(w * 0.05); ctx.fillStyle = '#003399'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*2, w, p*2); ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='center'; ctx.fillText(fTitle || "Tom's Space", w/2, p*0.8); drawBottomText(h - p*0.5, fc, `normal ${Math.floor(fSize*0.8)}px ${ff}`, 'none'); }
-                else if (s === 'gothic') { const p = Math.floor(w * 0.06); ctx.fillStyle = '#111'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*2, w, p*2); ctx.strokeStyle = '#800000'; ctx.lineWidth = 4; ctx.strokeRect(p-4, p-4, w-p*2+8, h-p*3+8); ctx.fillStyle=fc; ctx.font=`bold ${fSize*1.2}px ${ff}`; ctx.textAlign='center'; ctx.fillText(fTitle || 'CRAWLING IN MY SKIN', w/2, p*0.8); drawBottomText(h - p*0.5, fc, `normal ${fSize}px ${ff}`, 'none'); }
-                else if (s === 'girly') { const p = Math.floor(w * 0.04); ctx.fillStyle = '#ffb6c1'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*2, w, p*2); ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='center'; ctx.shadowColor='#ff69b4'; ctx.shadowBlur=5; ctx.fillText('✨ ' + (fTitle || 'So fetch!') + ' ✨', w/2, p*0.8); ctx.shadowColor='transparent'; drawBottomText(h - p*0.5, fc, `bold ${Math.floor(fSize*0.8)}px ${ff}`, '#ff69b4'); }
+                else if (s === 'cyber') { ctx.strokeStyle='#0ff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(w/2, h/2, Math.min(w,h)*0.3, 0, Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(w/2-20, h/2); ctx.lineTo(w/2+20, h/2); ctx.moveTo(w/2, h/2-20); ctx.lineTo(w/2, h/2+20); ctx.stroke(); if(fTitle){ ctx.fillStyle=fc; ctx.font=`${fSize*0.5}px Courier Prime, monospace`; ctx.textAlign='left'; ctx.fillText('TARGET: '+fTitle, 20, 30); ctx.fillText('SYS.ON', 20, 45); } drawBottomText(h - 20, fc, `bold ${fSize*0.8}px Courier Prime, monospace`, 'none'); }
+                else if (s === 'warning') { const p = Math.floor(h*0.1); ctx.fillStyle='#ffd700'; ctx.fillRect(0,h-p,w,p); ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('! WARNING: ' + (fTitle || 'RESTRICTED AREA'), w/2, h-p/2); ctx.textBaseline='alphabetic'; drawBottomText(h - p - 10, fc, `bold ${fSize}px ${ff}`, 'none'); }
+                else if (s === 'wanted') { const p = Math.floor(w * 0.08); ctx.fillStyle = '#d4c3a3'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p*1.5, w, p*1.5); ctx.strokeStyle = '#4a2f1d'; ctx.lineWidth = 4; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle=fc; ctx.font=`bold ${fSize*1.5}px ${ff}`; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText('WANTED', w/2, p*0.2); ctx.font=`bold ${fSize*0.8}px ${ff}`; ctx.fillText(fTitle || 'REWARD: $5,000', w/2, h - p*1.2); ctx.textBaseline='alphabetic'; drawBottomText(h - p*1.6, fc, `bold ${fSize*0.5}px ${ff}`, 'none'); }
+                else if (s === 'myspace') { const headH = Math.max(30, Math.floor(h * 0.08)); const p = Math.floor(w * 0.02); ctx.lineWidth = p; ctx.strokeStyle = '#003399'; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle = '#003399'; ctx.fillRect(0, 0, w, headH); ctx.fillStyle = '#ffffff'; ctx.font = `bold ${headH*0.6}px Tahoma, Arial`; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText('MySpace.com', p, headH/2); if(fTitle) { ctx.textAlign='right'; ctx.fillText(fTitle, w-p, headH/2); } ctx.textBaseline='alphabetic'; drawBottomText(h - p*1.5, '#003399', `bold ${fSize}px Tahoma, Arial`, '#fff'); }
+                else if (s === 'gothic') { const p = Math.floor(w * 0.05); ctx.fillStyle = '#111'; ctx.fillRect(0, 0, w, p); ctx.fillRect(0, 0, p, h); ctx.fillRect(w - p, 0, p, h); ctx.fillRect(0, h - p, w, p); ctx.strokeStyle = '#800000'; ctx.lineWidth = 3; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle = '#800000'; ctx.font = `${p*0.8}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🦇', p/2, p/2); ctx.fillText('🦇', w-p/2, p/2); ctx.fillText('🦇', p/2, h-p/2); ctx.fillText('🦇', w-p/2, h-p/2); if(fTitle){ ctx.font=`normal ${fSize*1.2}px Creepster, cursive`; ctx.fillStyle='#ff0000'; ctx.fillText(fTitle, w/2, p/2); } ctx.textBaseline='alphabetic'; drawBottomText(h - p/2 + fSize*0.3, '#ff0000', `normal ${fSize}px Creepster, cursive`, '#000'); }
+                else if (s === 'girly') { const p = Math.floor(w * 0.04); ctx.strokeStyle = '#ffb6c1'; ctx.lineWidth = p; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.strokeStyle = '#ff69b4'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.setLineDash([]); ctx.fillStyle = '#fff'; ctx.font = `${p*0.8}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✨', p/2, p/2); ctx.fillText('✨', w-p/2, p/2); ctx.fillText('✨', p/2, h-p/2); ctx.fillText('✨', w-p/2, h-p/2); if(fTitle){ ctx.font=`bold ${fSize}px "Comic Sans MS", "Comic Neue", cursive`; ctx.fillStyle='#ff69b4'; ctx.fillText(fTitle, w/2, p); } ctx.textBaseline='alphabetic'; drawBottomText(h - p*1.2, '#ff69b4', `bold ${fSize}px "Comic Sans MS", "Comic Neue", cursive`, '#fff'); }
+                else if (s === 'hacker') { const p = Math.floor(w * 0.05); ctx.strokeStyle = '#0f0'; ctx.lineWidth = 4; ctx.strokeRect(p, p, w-p*2, h-p*2); ctx.fillStyle = '#0f0'; ctx.font = `bold ${fSize}px 'Courier Prime', monospace`; ctx.textAlign = 'left'; ctx.fillText(fTitle || 'SYSTEM OVERRIDE', p+10, p+fSize+5); drawBottomText(h - p - 10, '#0f0', `bold ${fSize}px 'Courier Prime', monospace`, 'none'); }
+                else if (s === 'hearts') { const p = Math.floor(w * 0.06); ctx.strokeStyle = '#ff69b4'; ctx.lineWidth = p; ctx.strokeRect(p/2, p/2, w-p, h-p); ctx.fillStyle = '#ff1493'; ctx.font = `${p}px Arial`; ctx.textAlign='center'; ctx.fillText('❤', p, p+p/3); ctx.fillText('❤', w-p, p+p/3); ctx.fillText('❤', p, h-p+p/3); ctx.fillText('❤', w-p, h-p+p/3); if(fTitle) { ctx.fillStyle=fc; ctx.font=`bold ${fSize}px ${ff}`; ctx.fillText(fTitle, w/2, p*1.5); } drawBottomText(h - p*1.5, fc, `bold ${fSize}px ${ff}`); }
 
                 if (State.textOn && State.textStr) {
                     const lines = State.textStr.split('\n');
                     ctx.font = `${State.fSize}px ${State.fontFam}`; 
                     ctx.textAlign = 'center';
                     const tx = (w * State.tx) / 100, ty = (h * State.ty) / 100;
-                    
+
                     if (State.tFrame !== 'none') {
                         let maxW = 0; lines.forEach(l => { const mw = ctx.measureText(l).width; if(mw > maxW) maxW = mw; });
                         const boxW = maxW + 20, boxH = (State.fSize * lines.length) + 10;
                         const bx = tx - boxW/2, by = ty - State.fSize;
-                        
+
                         if(State.tFrame === 'solid') { ctx.fillStyle = State.tFrameColor; ctx.fillRect(bx, by, boxW, boxH); }
                         else if(State.tFrame === 'outline') { ctx.strokeStyle = State.tFrameColor; ctx.lineWidth = 3; ctx.strokeRect(bx, by, boxW, boxH); }
                         else if(State.tFrame === 'win98') { ctx.fillStyle = '#c0c0c0'; ctx.fillRect(bx, by, boxW, boxH); ctx.strokeStyle = '#dfdfdf'; ctx.lineWidth=2; ctx.strokeRect(bx, by, boxW, boxH); ctx.strokeStyle='#000'; ctx.strokeRect(bx+1, by+1, boxW-2, boxH-2); }
@@ -873,14 +1442,16 @@
 
             download: () => { 
                 if (Core.activeIdx === -1) return; 
-                const l = document.createElement('a'); 
-                l.download = `picsos_${Date.now()}.png`; 
-                l.href = canvas.toDataURL('image/png'); 
-                l.click(); 
+                Engine.run(false, true, (dataUrl) => {
+                    const l = document.createElement('a'); l.download = `picsos_${Date.now()}.png`; l.href = dataUrl; l.click(); 
+                });
             }
         };
 
-        bindUI(); syncUI();
+        // Esperar a que las fuentes se carguen antes del render inicial
+        document.fonts.ready.then(() => {
+            bindUI(); syncUI();
+        });
     </script>
 </body>
 </html>
