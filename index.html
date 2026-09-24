@@ -420,7 +420,6 @@
         const pushHistory = () => {
             if(Core.history.length > 20) Core.history.shift();
             const copyState = JSON.parse(JSON.stringify(State));
-            // Guardamos el estado actual exacto de las posiciones antes del arrastre
             copyState.__imgTransforms = Core.images.map(img => img.ft ? { ...img.ft } : null);
             copyState.__cropBox = { ...Core.cropBox };
             Core.history.push(copyState);
@@ -460,7 +459,7 @@
             const upd = () => Engine.run();
             const bindS = (id, key, parse) => {
                 const sl = document.getElementById(id); const txt = document.getElementById(id+'_txt');
-                sl.addEventListener('pointerdown', pushHistory); // Capturar historia ANTES de mover el slider
+                sl.addEventListener('pointerdown', pushHistory); 
                 sl.addEventListener('input', e => { txt.value = e.target.value; State[key] = parse(e.target.value); upd(); });
             };
 
@@ -518,7 +517,7 @@
 
             const bindTxt = (id, key) => { 
                 const el = document.getElementById(id); 
-                el.addEventListener('focus', pushHistory); // Capturar antes de escribir/cambiar fuente
+                el.addEventListener('focus', pushHistory); 
                 el.addEventListener('input', e => { State[key] = e.target.value; upd(); }); 
             };
             bindTxt('t_str', 'textStr'); bindTxt('t_frame_title', 'frameTitle'); bindTxt('t_frame_sub', 'frameSub');
@@ -695,7 +694,7 @@
                 if (!isCropActive && Core.activeStickerIdx === i) {
                     const deleteHit = Math.hypot(lx - aw/2, ly - (-ah/2)) < (Math.max(8, w*0.015)*1.5 + 10);
                     if (deleteHit) {
-                        pushHistory(); // Guardar historia antes de borrar
+                        pushHistory(); 
                         State.stickers.splice(i, 1);
                         Core.activeStickerIdx = -1; Engine.run(); return;
                     }
@@ -758,7 +757,7 @@
         canvas.addEventListener('pointermove', e => {
             if(!dragInfo.active) return;
             
-            // Disparar Undo Historial solo en el primer pixel de movimiento del arrastre
+            
             if(!dragInfo.hasMoved) {
                 pushHistory();
                 dragInfo.hasMoved = true;
@@ -1117,23 +1116,20 @@
 
                         Engine.drawOverlays(fCtx, w, h); 
 
-                        // Si es para Exportar, no añadimos padding visual, devolvemos la imagen limpia.
                         if (forExport) {
                             if (onComplete) onComplete(fBuf.toDataURL('image/png'));
                             return;
                         }
 
-                        // Renderizado de UI con Padding para comodidad
                         const PAD = Core.PAD;
                         canvas.width = w + PAD * 2;
                         canvas.height = h + PAD * 2;
                         
-                        ctx.clearRect(0, 0, canvas.width, canvas.height); // Fondo transparente
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
                         
                         ctx.save();
                         ctx.translate(PAD, PAD);
                         
-                        // Sombra de lienzo
                         ctx.shadowColor = 'rgba(0,0,0,0.6)';
                         ctx.shadowBlur = 15;
                         ctx.shadowOffsetX = 5;
@@ -1194,10 +1190,10 @@
                 const bw = box.w * aw, bh = box.h * ah;
 
                 ctx.fillStyle = 'rgba(0,0,0,0.65)';
-                ctx.fillRect(-aw/2, -ah/2, aw, by - (-ah/2)); // Top
-                ctx.fillRect(-aw/2, by + bh, aw, ah/2 - (by + bh)); // Bottom
-                ctx.fillRect(-aw/2, by, bx - (-aw/2), bh); // Left
-                ctx.fillRect(bx + bw, by, aw/2 - (bx + bw), bh); // Right
+                ctx.fillRect(-aw/2, -ah/2, aw, by - (-ah/2)); 
+                ctx.fillRect(-aw/2, by + bh, aw, ah/2 - (by + bh)); 
+                ctx.fillRect(-aw/2, by, bx - (-aw/2), bh);
+                ctx.fillRect(bx + bw, by, aw/2 - (bx + bw), bh);
 
                 ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
                 ctx.strokeRect(bx, by, bw, bh); ctx.setLineDash([]);
@@ -1448,7 +1444,6 @@
             }
         };
 
-        // Esperar a que las fuentes se carguen antes del render inicial
         document.fonts.ready.then(() => {
             bindUI(); syncUI();
         });
