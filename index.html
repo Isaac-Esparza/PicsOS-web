@@ -124,7 +124,7 @@
             </div>
             
             <div style="position: absolute; bottom: 5px; left: 5px; font-weight: bold; color: rgba(255,255,255,0.8); pointer-events: none; font-size: 10px; z-index: 100; text-shadow: 1px 1px 0 #000;">
-                💡 Shift+Click or Middle Click: Pan | CTRL+Scroll: Zoom
+                💡 Shift+Click or Middle Click: Pan | CTRL+Scroll: Zoom | Click & Drag outside crop box: Draw free crop
             </div>
 
             <div class="canvas-viewport" id="canvasViewport">
@@ -141,7 +141,19 @@
 
                 <div id="tab-crop" class="tab-content">
                     <div class="section-title"><span>Crop Tool</span><button class="btn-reset" onclick="Reset.tabCrop()">↺ Reset</button></div>
-                    <div class="ui-grid-3 ui-group" id="grp-crop-aspect" style="margin-top: 10px;">
+                    
+                    <div class="ui-grid-2">
+                        <div>
+                            <label>Crop Shape</label>
+                            <select id="sel_crop_shape">
+                                <option value="rect">Rectangle</option>
+                                <option value="circle">Ellipse / Circle</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label>Aspect Ratio</label>
+                    <div class="ui-grid-3 ui-group" id="grp-crop-aspect" style="margin-top: 5px;">
                         <button class="active" data-val="free">Free</button>
                         <button data-val="1">1:1 (Square)</button>
                         <button data-val="1.333">4:3</button>
@@ -293,6 +305,12 @@
 
                     <div id="stk_results" class="sticker-grid"></div>
 
+                    <div class="section-title"><span>Layer Options (Active Sticker)</span></div>
+                    <div style="display:flex; justify-content:space-between; gap:4px; margin-bottom:5px;">
+                        <button onclick="Engine.moveSticker(1)" style="color:#000080;">▲ Bring to Front</button>
+                        <button onclick="Engine.moveSticker(-1)" style="color:#800000;">▼ Send to Back</button>
+                    </div>
+
                     <div style="display:flex; justify-content:flex-end; align-items:flex-end;">
                         <button class="btn-reset" onclick="Reset.tabStickers()" style="margin-top:5px; margin-bottom:5px;">↺ Clear Canvas</button>
                     </div>
@@ -382,7 +400,13 @@
                 </div>
 
                 <div id="tab-export" class="tab-content hidden">
-                    <div class="section-title"><span>Destructive Compression</span></div>
+                    <div class="section-title"><span>Export Format</span></div>
+                    <select id="sel_format" style="margin-bottom: 10px;">
+                        <option value="jpeg">JPEG (Destructive Compression)</option>
+                        <option value="png">PNG (Lossless / Transparent)</option>
+                    </select>
+
+                    <div class="section-title"><span>Destructive Compression (JPEG Only)</span></div>
                     <label>JPEG Artifact Level (Quality %)</label>
                     <div class="slider-row"><input type="range" id="s_jpeg" min="1" max="100" value="100"><input type="text" id="s_jpeg_txt" readonly></div>
                     <label>Pixelate Block Size</label>
@@ -403,14 +427,14 @@
         const Core = { images: [], activeIdx: -1, activeStickerIdx: -1, history: [], bgImg: null, stickerCache: {}, cropBox: {x:0, y:0, w:1, h:1}, zoom: 0, PAD: 100 };
 
         const defaultState = () => ({
-            cropAspect: 'free',
+            cropAspect: 'free', cropShape: 'rect',
             color: 'none', exp: 0, cont: 0, intensity: 100,
             shader: 'none', sInt: 100, noise: false, noiseAmt: 40, noiseSize: 1, vignette: false, rgbSplit: 0,
             frame: 'none', frameTitle: 'TITLE', frameSub: 'Bottom Text', frameFSize: 40, frameBotOn: false, frameFont: 'Arial, sans-serif', frameColor: '#ffffff',
             textOn: false, textStr: 'PICSOS 2000', fontFam: 'Arial, sans-serif', fontColor: '#ffffff', shadowColor: '#000000', shadowBlur: 2, fSize: 48, tx: 50, ty: 50, tFrame: 'none', tFrameColor: '#000000',
             grid: 'free', aspect: 1, pad: 4, bgColor: '#000000',
             stickers: [],
-            jpeg: 100, pixelSize: 1, res: 800
+            exportFormat: 'jpeg', jpeg: 100, pixelSize: 1, res: 800
         });
 
         let State = defaultState();
@@ -426,7 +450,7 @@
         };
 
         const Reset = {
-            tabCrop: () => { Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; syncUI(); Engine.run(); },
+            tabCrop: () => { Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; State.cropShape = 'rect'; syncUI(); Engine.run(); },
             tabColor: () => { pushHistory(); const d = defaultState(); State.color = d.color; State.exp = d.exp; State.cont = d.cont; State.intensity = d.intensity; syncUI(); Engine.run(); },
             tabFx: () => { pushHistory(); const d = defaultState(); State.shader = d.shader; State.sInt = d.sInt; State.noise = d.noise; State.noiseAmt = d.noiseAmt; State.noiseSize = d.noiseSize; State.vignette = d.vignette; State.rgbSplit = d.rgbSplit; syncUI(); Engine.run(); },
             tabText: () => { pushHistory(); const d = defaultState(); Object.assign(State, {textOn: d.textOn, textStr: d.textStr, fontFam: d.fontFam, fontColor: d.fontColor, shadowColor: d.shadowColor, shadowBlur: d.shadowBlur, fSize: d.fSize, tx: d.tx, ty: d.ty, tFrame: d.tFrame, tFrameColor: d.tFrameColor}); syncUI(); Engine.run(); },
@@ -452,7 +476,9 @@
             document.getElementById('c_noise').checked = State.noise; document.getElementById('c_vignette').checked = State.vignette; document.getElementById('c_text').checked = State.textOn; document.getElementById('c_frame_bot').checked = State.frameBotOn;
             document.getElementById('t_str').value = State.textStr; document.getElementById('t_frame_title').value = State.frameTitle; document.getElementById('t_frame_sub').value = State.frameSub; 
             document.getElementById('c_font').value = State.fontColor; document.getElementById('c_shadow').value = State.shadowColor; document.getElementById('c_bg').value = State.bgColor; document.getElementById('c_ffont').value = State.frameColor;
+            
             document.getElementById('sel_font').value = State.fontFam; document.getElementById('sel_tframe').value = State.tFrame; document.getElementById('c_tframe').value = State.tFrameColor; document.getElementById('sel_ffont').value = State.frameFont;
+            document.getElementById('sel_crop_shape').value = State.cropShape; document.getElementById('sel_format').value = State.exportFormat;
         };
 
         const bindUI = () => {
@@ -485,7 +511,7 @@
                                 Core.cropBox = { x: 0, y: 0, w: 1, h: 1 };
                             } else {
                                 const aspect = parseFloat(State[key]);
-                                let activeTarget = null, sImg = null;
+                                let sImg = null;
                                 if (Core.activeStickerIdx !== -1 && State.stickers[Core.activeStickerIdx]) {
                                     sImg = Core.stickerCache[State.stickers[Core.activeStickerIdx].src];
                                 } else if (Core.activeIdx !== -1 && Core.images[Core.activeIdx]) {
@@ -524,6 +550,9 @@
             bindTxt('c_font', 'fontColor'); bindTxt('c_shadow', 'shadowColor'); bindTxt('c_bg', 'bgColor'); 
             bindTxt('sel_font', 'fontFam'); bindTxt('sel_tframe', 'tFrame'); bindTxt('c_tframe', 'tFrameColor');
             bindTxt('sel_ffont', 'frameFont'); bindTxt('c_ffont', 'frameColor');
+
+            document.getElementById('sel_crop_shape').addEventListener('change', e => { pushHistory(); State.cropShape = e.target.value; upd(); });
+            document.getElementById('sel_format').addEventListener('change', e => { pushHistory(); State.exportFormat = e.target.value; upd(); });
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.addEventListener('click', e => {
@@ -674,6 +703,13 @@
                     } else if (lx >= bx && lx <= bx+bw && ly >= by && ly <= by+bh) {
                         dragInfo = { active: true, hasMoved: false, mode: 'crop-move', offX: lx - bx, offY: ly - by, aw, ah };
                         return;
+                    } else {
+                        // Drag & Draw new Crop Box!
+                        let nx = Math.max(0, Math.min(1, (lx + aw/2)/aw));
+                        let ny = Math.max(0, Math.min(1, (ly + ah/2)/ah));
+                        dragInfo = { active: true, hasMoved: false, mode: 'crop-draw', startX: nx, startY: ny, aw, ah };
+                        Core.cropBox = { x: nx, y: ny, w: 0.001, h: 0.001 };
+                        return;
                     }
                 }
             }
@@ -681,6 +717,7 @@
             let hitSticker = false;
             let newlySelectedStickerIdx = -1;
 
+            // Iterate backwards to hit the topmost sticker first
             for(let i = State.stickers.length - 1; i >= 0; i--) {
                 const stk = State.stickers[i];
                 const sImg = Core.stickerCache[stk.src];
@@ -757,7 +794,6 @@
         canvas.addEventListener('pointermove', e => {
             if(!dragInfo.active) return;
             
-            
             if(!dragInfo.hasMoved) {
                 pushHistory();
                 dragInfo.hasMoved = true;
@@ -765,6 +801,31 @@
 
             const img = Core.images[Core.activeIdx];
             const { mx, my, w, h } = getMousePos(e);
+
+            if (dragInfo.mode === 'crop-draw') {
+                const { aw, ah, startX, startY } = dragInfo;
+                let activeTarget = (Core.activeStickerIdx !== -1) ? State.stickers[Core.activeStickerIdx] : Core.images[Core.activeIdx].ft;
+                const dx = mx - activeTarget.x, dy = my - activeTarget.y;
+                const lx = dx * Math.cos(-activeTarget.r) - dy * Math.sin(-activeTarget.r);
+                const ly = dx * Math.sin(-activeTarget.r) + dy * Math.cos(-activeTarget.r);
+
+                let currentX = Math.max(0, Math.min(1, (lx + aw/2)/aw));
+                let currentY = Math.max(0, Math.min(1, (ly + ah/2)/ah));
+
+                let nX = Math.min(startX, currentX);
+                let nY = Math.min(startY, currentY);
+                let nW = Math.abs(currentX - startX);
+                let nH = Math.abs(currentY - startY);
+
+                if (State.cropAspect !== 'free') {
+                    const aspect = parseFloat(State.cropAspect);
+                    nH = nW * (aw/ah) / aspect;
+                    if(currentY < startY) nY = startY - nH;
+                }
+
+                Core.cropBox = { x: nX, y: nY, w: Math.max(0.01, nW), h: Math.max(0.01, nH) };
+                Engine.run(); return;
+            }
 
             if (dragInfo.mode === 'crop-resize') {
                 const { aw, ah, corner } = dragInfo;
@@ -874,6 +935,19 @@
                 Engine.run(true);
             },
 
+            moveSticker: (dir) => {
+                if(Core.activeStickerIdx === -1) return;
+                let targetIdx = Core.activeStickerIdx + dir;
+                if(targetIdx >= 0 && targetIdx < State.stickers.length) {
+                    pushHistory();
+                    const temp = State.stickers[Core.activeStickerIdx];
+                    State.stickers[Core.activeStickerIdx] = State.stickers[targetIdx];
+                    State.stickers[targetIdx] = temp;
+                    Core.activeStickerIdx = targetIdx;
+                    Engine.run();
+                }
+            },
+
             searchStickers: async () => {
                 const q = document.getElementById('stk_search').value.trim();
                 if(!q) return;
@@ -954,12 +1028,18 @@
                 const sImg = isSticker ? Core.stickerCache[targetObj.src] : targetObj;
                 const box = Core.cropBox;
 
-                if (box.x === 0 && box.y === 0 && box.w === 1 && box.h === 1) return;
+                if (box.x === 0 && box.y === 0 && box.w === 1 && box.h === 1 && State.cropShape !== 'circle') return;
 
                 const c = document.createElement('canvas');
                 c.width = sImg.width * box.w;
                 c.height = sImg.height * box.h;
                 const cCtx = c.getContext('2d');
+
+                if (State.cropShape === 'circle') {
+                    cCtx.beginPath();
+                    cCtx.ellipse(c.width/2, c.height/2, c.width/2, c.height/2, 0, 0, Math.PI*2);
+                    cCtx.clip();
+                }
 
                 cCtx.drawImage(sImg, -sImg.width * box.x, -sImg.height * box.y);
 
@@ -1092,7 +1172,8 @@
 
                 const cmp = new Image();
                 try {
-                    const dataUrl = buf.toDataURL('image/jpeg', State.jpeg / 100);
+                    const mimeType = State.exportFormat === 'png' ? 'image/png' : 'image/jpeg';
+                    const dataUrl = buf.toDataURL(mimeType, State.jpeg / 100);
 
                     cmp.onload = () => {
                         const pixCanvas = document.createElement('canvas');
@@ -1190,13 +1271,27 @@
                 const bw = box.w * aw, bh = box.h * ah;
 
                 ctx.fillStyle = 'rgba(0,0,0,0.65)';
-                ctx.fillRect(-aw/2, -ah/2, aw, by - (-ah/2)); 
-                ctx.fillRect(-aw/2, by + bh, aw, ah/2 - (by + bh)); 
-                ctx.fillRect(-aw/2, by, bx - (-aw/2), bh);
-                ctx.fillRect(bx + bw, by, aw/2 - (bx + bw), bh);
+                if(State.cropShape === 'circle') {
+                    ctx.beginPath();
+                    ctx.rect(-aw/2, -ah/2, aw, ah);
+                    ctx.ellipse(bx + bw/2, by + bh/2, bw/2, bh/2, 0, 0, Math.PI*2);
+                    ctx.fill("evenodd");
+                } else {
+                    ctx.fillRect(-aw/2, -ah/2, aw, by - (-ah/2)); 
+                    ctx.fillRect(-aw/2, by + bh, aw, ah/2 - (by + bh)); 
+                    ctx.fillRect(-aw/2, by, bx - (-aw/2), bh);
+                    ctx.fillRect(bx + bw, by, aw/2 - (bx + bw), bh);
+                }
 
                 ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-                ctx.strokeRect(bx, by, bw, bh); ctx.setLineDash([]);
+                if (State.cropShape === 'circle') {
+                    ctx.beginPath();
+                    ctx.ellipse(bx + bw/2, by + bh/2, bw/2, bh/2, 0, 0, Math.PI*2);
+                    ctx.stroke();
+                } else {
+                    ctx.strokeRect(bx, by, bw, bh);
+                }
+                ctx.setLineDash([]);
 
                 ctx.fillStyle = '#00ff00';
                 const cs = Math.max(10, w*0.015);
@@ -1439,7 +1534,8 @@
             download: () => { 
                 if (Core.activeIdx === -1) return; 
                 Engine.run(false, true, (dataUrl) => {
-                    const l = document.createElement('a'); l.download = `picsos_${Date.now()}.png`; l.href = dataUrl; l.click(); 
+                    const ext = State.exportFormat === 'png' ? 'png' : 'jpg';
+                    const l = document.createElement('a'); l.download = `picsos_${Date.now()}.${ext}`; l.href = dataUrl; l.click(); 
                 });
             }
         };
