@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>PicsOS</title>
+    <title>PicsOS - Ultimate Edition</title>
     <style>
-       
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Courier+Prime&family=Creepster&family=DotGothic16&family=Permanent+Marker&family=Press+Start+2P&family=VT323&display=swap');
 
         html, body { margin: 0; padding: 0; height: 100%; background: #008080; font-family: 'Tahoma', sans-serif; font-size: 11px; overflow: hidden; user-select: none; }
@@ -103,14 +102,15 @@
                 </div>
 
                 <div class="section-title"><span>Workflow</span></div>
-                <button class="nav-btn active" data-target="tab-crop">1. Crop</button>
-                <button class="nav-btn" data-target="tab-color">2. Color Tints</button>
+                <button class="nav-btn active" data-target="tab-crop">1. Crop & Transform</button>
+                <button class="nav-btn" data-target="tab-color">2. Color & Adjusts</button>
                 <button class="nav-btn" data-target="tab-fx">3. Shaders / FX</button>
                 <button class="nav-btn" data-target="tab-frames">4. Frames & HUD</button>
                 <button class="nav-btn" data-target="tab-stickers" style="background: #e6e6fa; color: #000080;">5. Wikimedia</button>
                 <button class="nav-btn" data-target="tab-text">6. Free Text Box</button>
-                <button class="nav-btn" data-target="tab-collage">7. Collage & BG</button>
-                <button class="nav-btn" data-target="tab-export">8. Export</button>
+                <button class="nav-btn" data-target="tab-draw">7. Brush / Draw</button>
+                <button class="nav-btn" data-target="tab-collage">8. Collage & BG</button>
+                <button class="nav-btn" data-target="tab-export">9. Export</button>
             </div>
         </div>
 
@@ -124,7 +124,7 @@
             </div>
             
             <div style="position: absolute; bottom: 5px; left: 5px; font-weight: bold; color: rgba(255,255,255,0.8); pointer-events: none; font-size: 10px; z-index: 100; text-shadow: 1px 1px 0 #000;">
-                💡 Shift+Click or Middle Click: Pan | CTRL+Scroll: Zoom | Click & Drag outside crop box: Draw free crop
+                💡 Shift+Click: Pan | CTRL+Scroll: Zoom | Click & Drag outside crop box: Free crop
             </div>
 
             <div class="canvas-viewport" id="canvasViewport">
@@ -140,6 +140,14 @@
             <div class="content">
 
                 <div id="tab-crop" class="tab-content">
+                    <div class="section-title"><span>Transform Tools</span></div>
+                    <div class="ui-grid-4">
+                        <button onclick="Engine.transformBase('rotL')" style="font-size:12px;">↺ 90°</button>
+                        <button onclick="Engine.transformBase('rotR')" style="font-size:12px;">↻ 90°</button>
+                        <button onclick="Engine.transformBase('flipH')">↔ Flip H</button>
+                        <button onclick="Engine.transformBase('flipV')">↕ Flip V</button>
+                    </div>
+
                     <div class="section-title"><span>Crop Tool</span><button class="btn-reset" onclick="Reset.tabCrop()">↺ Reset</button></div>
                     
                     <div class="ui-grid-2">
@@ -187,10 +195,17 @@
                     </div>
                     <label style="color: #000080; font-weight: bold; margin-top:10px;">Color Filter Intensity (%)</label>
                     <div class="slider-row"><input type="range" id="s_int" min="0" max="100" value="100"><input type="text" id="s_int_txt" readonly></div>
+                    
+                    <div class="section-title"><span>Adjustments</span></div>
                     <label>Exposure</label>
                     <div class="slider-row"><input type="range" id="s_exp" min="-100" max="100" value="0"><input type="text" id="s_exp_txt" readonly></div>
                     <label>Contrast</label>
                     <div class="slider-row"><input type="range" id="s_cont" min="-100" max="100" value="0"><input type="text" id="s_cont_txt" readonly></div>
+                    <label>Saturation</label>
+                    <div class="slider-row"><input type="range" id="s_sat" min="-100" max="100" value="0"><input type="text" id="s_sat_txt" readonly></div>
+                    <label>Gaussian Blur (px)</label>
+                    <div class="slider-row"><input type="range" id="s_blur" min="0" max="50" value="0"><input type="text" id="s_blur_txt" readonly></div>
+                    
                     <button class="btn-bake" onclick="Engine.bakeBase()">[ 💾 APPLY TO SELECTION ]</button>
                 </div>
 
@@ -366,6 +381,19 @@
                     <button class="btn-bake" onclick="Engine.bakeFlat()">[ 💾 BAKE TEXT TO IMAGE ]</button>
                 </div>
 
+                <div id="tab-draw" class="tab-content hidden">
+                    <div class="section-title"><span>Freehand Brush Tool</span><button class="btn-reset" onclick="Reset.tabDraw()">↺ Reset</button></div>
+                    <label style="display:flex; gap:5px; margin-top: 10px;"><input type="checkbox" id="c_draw" autocomplete="off"> Enable Brush Mode</label>
+                    <p style="color:#000080; font-size:10px; margin: 4px 0;">* Disables panning to allow drawing directly on the canvas.</p>
+                    <div class="ui-grid-2" style="margin-top: 10px;">
+                        <div><label>Brush Color</label><input type="color" id="c_brush" value="#ff0000"></div>
+                        <div><label>Brush Size (px)</label><div class="slider-row"><input type="range" id="s_bsize" min="1" max="100" value="5"><input type="text" id="s_bsize_txt" readonly></div></div>
+                    </div>
+                    <button class="btn-reset" onclick="Engine.undoDraw()" style="margin-top:10px; font-size:11px;">↶ Undo Last Stroke</button>
+                    <button class="btn-reset" onclick="Engine.clearDraw()" style="margin-top:5px; font-size:11px; color:#800000;">🗑 Clear All Strokes</button>
+                    <button class="btn-bake" onclick="Engine.bakeFlat()">[ 💾 BAKE DRAWING TO IMAGE ]</button>
+                </div>
+
                 <div id="tab-collage" class="tab-content hidden">
                     <div class="section-title"><span>Grid & Placement Modes</span><button class="btn-reset" onclick="Reset.tabCollage()">↺ Reset</button></div>
                     <div class="ui-grid-3 ui-group" id="grp-grid" style="margin-top: 10px;">
@@ -428,10 +456,11 @@
 
         const defaultState = () => ({
             cropAspect: 'free', cropShape: 'rect',
-            color: 'none', exp: 0, cont: 0, intensity: 100,
+            color: 'none', exp: 0, cont: 0, intensity: 100, sat: 0, blur: 0,
             shader: 'none', sInt: 100, noise: false, noiseAmt: 40, noiseSize: 1, vignette: false, rgbSplit: 0,
             frame: 'none', frameTitle: 'TITLE', frameSub: 'Bottom Text', frameFSize: 40, frameBotOn: false, frameFont: 'Arial, sans-serif', frameColor: '#ffffff',
             textOn: false, textStr: 'PICSOS 2000', fontFam: 'Arial, sans-serif', fontColor: '#ffffff', shadowColor: '#000000', shadowBlur: 2, fSize: 48, tx: 50, ty: 50, tFrame: 'none', tFrameColor: '#000000',
+            drawOn: false, brushColor: '#ff0000', brushSize: 5, drawings: [],
             grid: 'free', aspect: 1, pad: 4, bgColor: '#000000',
             stickers: [],
             exportFormat: 'jpeg', jpeg: 100, pixelSize: 1, res: 800
@@ -451,9 +480,10 @@
 
         const Reset = {
             tabCrop: () => { Core.cropBox = {x:0, y:0, w:1, h:1}; State.cropAspect = 'free'; State.cropShape = 'rect'; syncUI(); Engine.run(); },
-            tabColor: () => { pushHistory(); const d = defaultState(); State.color = d.color; State.exp = d.exp; State.cont = d.cont; State.intensity = d.intensity; syncUI(); Engine.run(); },
+            tabColor: () => { pushHistory(); const d = defaultState(); State.color = d.color; State.exp = d.exp; State.cont = d.cont; State.sat = d.sat; State.blur = d.blur; State.intensity = d.intensity; syncUI(); Engine.run(); },
             tabFx: () => { pushHistory(); const d = defaultState(); State.shader = d.shader; State.sInt = d.sInt; State.noise = d.noise; State.noiseAmt = d.noiseAmt; State.noiseSize = d.noiseSize; State.vignette = d.vignette; State.rgbSplit = d.rgbSplit; syncUI(); Engine.run(); },
             tabText: () => { pushHistory(); const d = defaultState(); Object.assign(State, {textOn: d.textOn, textStr: d.textStr, fontFam: d.fontFam, fontColor: d.fontColor, shadowColor: d.shadowColor, shadowBlur: d.shadowBlur, fSize: d.fSize, tx: d.tx, ty: d.ty, tFrame: d.tFrame, tFrameColor: d.tFrameColor}); syncUI(); Engine.run(); },
+            tabDraw: () => { pushHistory(); State.drawOn = false; State.drawings = []; syncUI(); Engine.run(); },
             tabFrames: () => { pushHistory(); const d = defaultState(); State.frame = d.frame; State.frameTitle = d.frameTitle; State.frameSub = d.frameSub; State.frameFSize = d.frameFSize; State.frameBotOn = d.frameBotOn; State.frameFont = d.frameFont; State.frameColor = d.frameColor; syncUI(); Engine.run(); },
             tabCollage: () => { pushHistory(); const d = defaultState(); Object.assign(State, {grid: d.grid, aspect: d.aspect, pad: d.pad, bgColor: d.bgColor}); Core.bgImg = null; syncUI(); Engine.run(); },
             tabStickers: () => { pushHistory(); State.stickers = []; Core.activeStickerIdx = -1; Engine.run(); }
@@ -462,6 +492,7 @@
         const syncUI = () => {
             const setS = (id, val) => { const el = document.getElementById(id); if(el){ el.value = val; document.getElementById(id+'_txt').value = val; } };
             setS('s_exp', State.exp); setS('s_cont', State.cont); setS('s_int', State.intensity); setS('s_sint', State.sInt); setS('s_rgb', State.rgbSplit); 
+            setS('s_sat', State.sat); setS('s_blur', State.blur); setS('s_bsize', State.brushSize);
             setS('s_namt', State.noiseAmt); setS('s_nsiz', State.noiseSize);
             setS('s_jpeg', State.jpeg); setS('s_pix', State.pixelSize); setS('s_res', State.res);
             setS('s_fsize', State.fSize); setS('s_sblur', State.shadowBlur); setS('s_pad', State.pad); setS('s_frm_size', State.frameFSize);
@@ -473,9 +504,9 @@
             };
             setG('grp-crop-aspect', State.cropAspect); setG('grp-color', State.color); setG('grp-shader', State.shader); setG('grp-frame', State.frame); setG('grp-grid', State.grid); setG('grp-aspect', State.aspect);
 
-            document.getElementById('c_noise').checked = State.noise; document.getElementById('c_vignette').checked = State.vignette; document.getElementById('c_text').checked = State.textOn; document.getElementById('c_frame_bot').checked = State.frameBotOn;
+            document.getElementById('c_noise').checked = State.noise; document.getElementById('c_vignette').checked = State.vignette; document.getElementById('c_text').checked = State.textOn; document.getElementById('c_frame_bot').checked = State.frameBotOn; document.getElementById('c_draw').checked = State.drawOn;
             document.getElementById('t_str').value = State.textStr; document.getElementById('t_frame_title').value = State.frameTitle; document.getElementById('t_frame_sub').value = State.frameSub; 
-            document.getElementById('c_font').value = State.fontColor; document.getElementById('c_shadow').value = State.shadowColor; document.getElementById('c_bg').value = State.bgColor; document.getElementById('c_ffont').value = State.frameColor;
+            document.getElementById('c_font').value = State.fontColor; document.getElementById('c_shadow').value = State.shadowColor; document.getElementById('c_bg').value = State.bgColor; document.getElementById('c_ffont').value = State.frameColor; document.getElementById('c_brush').value = State.brushColor;
             
             document.getElementById('sel_font').value = State.fontFam; document.getElementById('sel_tframe').value = State.tFrame; document.getElementById('c_tframe').value = State.tFrameColor; document.getElementById('sel_ffont').value = State.frameFont;
             document.getElementById('sel_crop_shape').value = State.cropShape; document.getElementById('sel_format').value = State.exportFormat;
@@ -489,11 +520,11 @@
                 sl.addEventListener('input', e => { txt.value = e.target.value; State[key] = parse(e.target.value); upd(); });
             };
 
-            ['s_exp','s_cont','s_int','s_sint','s_rgb','s_namt','s_nsiz','s_jpeg','s_pix','s_res','s_fsize','s_sblur','s_pad','s_frm_size'].forEach(id => {
+            ['s_exp','s_cont','s_int','s_sint','s_rgb','s_sat','s_blur','s_bsize','s_namt','s_nsiz','s_jpeg','s_pix','s_res','s_fsize','s_sblur','s_pad','s_frm_size'].forEach(id => {
                 let key = id.replace('s_','');
                 if(key==='pix') key='pixelSize'; if(key==='int') key='intensity'; if(key==='sint') key='sInt';
                 if(key==='namt') key='noiseAmt'; if(key==='nsiz') key='noiseSize'; if(key==='frm_size') key='frameFSize';
-                if(key==='sblur') key='shadowBlur'; if(key==='fsize') key='fSize'; 
+                if(key==='sblur') key='shadowBlur'; if(key==='fsize') key='fSize'; if(key==='bsize') key='brushSize'; 
                 bindS(id, key, parseFloat);
             });
 
@@ -533,10 +564,10 @@
             
             bindG('grp-crop-aspect', 'cropAspect'); bindG('grp-color', 'color'); bindG('grp-shader', 'shader'); bindG('grp-frame', 'frame'); bindG('grp-grid', 'grid'); bindG('grp-aspect', 'aspect', parseFloat);
 
-            ['c_noise', 'c_vignette', 'c_text', 'c_frame_bot'].forEach(id => { 
+            ['c_noise', 'c_vignette', 'c_text', 'c_frame_bot', 'c_draw'].forEach(id => { 
                 document.getElementById(id).addEventListener('change', e => { 
                     pushHistory(); 
-                    State[id.replace('c_','').replace('text','textOn').replace('frame_bot','frameBotOn')] = e.target.checked; 
+                    State[id.replace('c_','').replace('text','textOn').replace('frame_bot','frameBotOn').replace('draw','drawOn')] = e.target.checked; 
                     upd(); 
                 }); 
             });
@@ -547,7 +578,7 @@
                 el.addEventListener('input', e => { State[key] = e.target.value; upd(); }); 
             };
             bindTxt('t_str', 'textStr'); bindTxt('t_frame_title', 'frameTitle'); bindTxt('t_frame_sub', 'frameSub');
-            bindTxt('c_font', 'fontColor'); bindTxt('c_shadow', 'shadowColor'); bindTxt('c_bg', 'bgColor'); 
+            bindTxt('c_font', 'fontColor'); bindTxt('c_shadow', 'shadowColor'); bindTxt('c_bg', 'bgColor'); bindTxt('c_brush', 'brushColor');
             bindTxt('sel_font', 'fontFam'); bindTxt('sel_tframe', 'tFrame'); bindTxt('c_tframe', 'tFrameColor');
             bindTxt('sel_ffont', 'frameFont'); bindTxt('c_ffont', 'frameColor');
 
@@ -573,7 +604,7 @@
                         let w = State.res, h = State.res;
                         const ratio = img.width / img.height;
                         if (ratio > 1) h = Math.round(State.res / ratio); else w = Math.round(State.res * ratio);
-                        img.ft = { x: w/2, y: h/2, r: 0, s: 2.5 }; 
+                        img.ft = { x: w/2, y: h/2, r: 0, s: 2.5, flipX: 1, flipY: 1 }; 
                         Core.images.push(img); if (Core.activeIdx === -1) Core.activeIdx = 0; Core.cropBox = {x:0, y:0, w:1, h:1}; updateGallery(); pushHistory(); Engine.run(); 
                     }; img.src = ev.target.result; }; r.readAsDataURL(f);
                 });
@@ -593,6 +624,9 @@
             let isPanning = false, startPanX, startPanY, startScrollX, startScrollY;
 
             cViewport.addEventListener('pointerdown', e => {
+                const isDrawActive = !document.getElementById('tab-draw').classList.contains('hidden') && State.drawOn;
+                if (isDrawActive) return; // Prevent panning if drawing
+
                 if (e.button === 1 || e.shiftKey) {
                     isPanning = true;
                     startPanX = e.clientX;
@@ -671,6 +705,15 @@
             if(Core.activeIdx === -1 || !Core.images[Core.activeIdx]) return;
 
             const { mx, my, w, h } = getMousePos(e);
+            
+            const isDrawActive = !document.getElementById('tab-draw').classList.contains('hidden') && State.drawOn;
+            if (isDrawActive) {
+                pushHistory();
+                dragInfo = { active: true, hasMoved: false, mode: 'brush' };
+                State.drawings.push({ color: State.brushColor, size: State.brushSize, points: [{x: mx, y: my}] });
+                Engine.run(); return;
+            }
+
             const isCropActive = !document.getElementById('tab-crop').classList.contains('hidden');
 
             if (isCropActive) {
@@ -794,13 +837,21 @@
         canvas.addEventListener('pointermove', e => {
             if(!dragInfo.active) return;
             
+            const { mx, my, w, h } = getMousePos(e);
+
+            if (dragInfo.mode === 'brush') {
+                const lastStroke = State.drawings[State.drawings.length - 1];
+                lastStroke.points.push({x: mx, y: my});
+                Engine.run(true); 
+                return;
+            }
+
             if(!dragInfo.hasMoved) {
                 pushHistory();
                 dragInfo.hasMoved = true;
             }
 
             const img = Core.images[Core.activeIdx];
-            const { mx, my, w, h } = getMousePos(e);
 
             if (dragInfo.mode === 'crop-draw') {
                 const { aw, ah, startX, startY } = dragInfo;
@@ -920,6 +971,22 @@
                     State = prevState;
                     syncUI(); Engine.run();
                 }
+            },
+            
+            undoDraw: () => { if(State.drawings.length > 0) { pushHistory(); State.drawings.pop(); Engine.run(); } },
+            clearDraw: () => { pushHistory(); State.drawings = []; Engine.run(); },
+
+            transformBase: (type) => {
+                if (Core.activeIdx === -1 || !Core.images[Core.activeIdx]) return;
+                pushHistory();
+                const ft = Core.images[Core.activeIdx].ft;
+                if (!ft.flipX) ft.flipX = 1; if (!ft.flipY) ft.flipY = 1;
+
+                if (type === 'rotL') ft.r -= Math.PI / 2;
+                if (type === 'rotR') ft.r += Math.PI / 2;
+                if (type === 'flipH') ft.flipX *= -1;
+                if (type === 'flipV') ft.flipY *= -1;
+                Engine.run();
             },
 
             setZoom: (delta, exact = null) => {
@@ -1082,7 +1149,7 @@
                         const newUrl = c.toDataURL('image/png');
                         Core.stickerCache[newUrl] = newImg;
                         stk.src = newUrl;
-                        State.color = 'none'; State.exp = 0; State.cont = 0; State.intensity = 100;
+                        State.color = 'none'; State.exp = 0; State.cont = 0; State.intensity = 100; State.sat = 0;
                         State.shader = 'none'; State.sInt = 100; State.noise = false; 
                         State.vignette = false; State.rgbSplit = 0; State.noiseAmt = 40; State.noiseSize = 1;
                         syncUI(); Engine.run();
@@ -1105,9 +1172,9 @@
 
                 const newImg = new Image();
                 newImg.onload = () => {
-                    newImg.ft = { x: origImg.ft.x, y: origImg.ft.y, r: origImg.ft.r, s: origImg.ft.s };
+                    newImg.ft = { x: origImg.ft.x, y: origImg.ft.y, r: origImg.ft.r, s: origImg.ft.s, flipX: origImg.ft.flipX, flipY: origImg.ft.flipY };
                     Core.images[Core.activeIdx] = newImg;
-                    State.color = 'none'; State.exp = 0; State.cont = 0; State.intensity = 100;
+                    State.color = 'none'; State.exp = 0; State.cont = 0; State.intensity = 100; State.sat = 0;
                     State.shader = 'none'; State.sInt = 100; State.noise = false; 
                     State.vignette = false; State.rgbSplit = 0; State.noiseAmt = 40; State.noiseSize = 1;
                     syncUI(); Engine.run(); updateGallery();
@@ -1127,7 +1194,7 @@
                             Core.activeStickerIdx = -1;
 
                             const dims = getLogicalDims();
-                            img.ft = { x: dims.w/2, y: dims.h/2, r: 0, s: 2.5 }; 
+                            img.ft = { x: dims.w/2, y: dims.h/2, r: 0, s: 2.5, flipX: 1, flipY: 1 }; 
 
                             syncUI(); Engine.run(); updateGallery();
                         };
@@ -1166,7 +1233,7 @@
                     bCtx.drawImage(sImg, -aw/2, -ah/2, aw, ah); bCtx.restore();
                 });
 
-                if(!fastMode && (State.color !== 'none' || State.shader !== 'none' || State.exp !== 0 || State.cont !== 0 || State.noise || State.vignette || State.rgbSplit > 0)) {
+                if(!fastMode && (State.color !== 'none' || State.shader !== 'none' || State.exp !== 0 || State.cont !== 0 || State.sat !== 0 || State.noise || State.vignette || State.rgbSplit > 0)) {
                     let idata = bCtx.getImageData(0, 0, w, h); Engine.computeShaders(idata, w, h); bCtx.putImageData(idata, 0, 0);
                 }
 
@@ -1345,19 +1412,37 @@
 
             drawCollageGrid: (ctx, w, h) => {
                 const drawC = (img, x, y, cw, ch) => {
-                    if (!img) return; const rI = img.width/img.height, rC = cw/ch; let sx = 0, sy = 0, sw = img.width, sh = img.height;
+                    if (!img) return; 
+                    ctx.save();
+                    if(State.blur > 0) ctx.filter = `blur(${State.blur}px)`;
+                    const rI = img.width/img.height, rC = cw/ch; 
+                    let sx = 0, sy = 0, sw = img.width, sh = img.height;
                     if (rI > rC) { sw = img.height * rC; sx = (img.width - sw)/2; } else { sh = img.width / rC; sy = (img.height - sh)/2; }
-                    ctx.drawImage(img, sx, sy, sw, sh, x, y, cw, ch);
+                    
+                    if (img.ft && (img.ft.flipX === -1 || img.ft.flipY === -1)) {
+                        ctx.translate(x + cw/2, y + ch/2);
+                        ctx.scale(img.ft.flipX, img.ft.flipY);
+                        ctx.drawImage(img, sx, sy, sw, sh, -cw/2, -ch/2, cw, ch);
+                    } else {
+                        ctx.drawImage(img, sx, sy, sw, sh, x, y, cw, ch);
+                    }
+                    ctx.restore();
                 };
+
                 const imgs = Core.images, p = State.pad, active = imgs[Core.activeIdx];
                 const getI = (i) => imgs[i] || active;
 
                 if (State.grid === 'free') {
                     imgs.forEach(img => {
-                        if(!img.ft) img.ft = { x: w/2, y: h/2, r: 0, s: 2.5 };
-                        ctx.save(); ctx.translate(img.ft.x, img.ft.y); ctx.rotate(img.ft.r);
+                        if(!img.ft) img.ft = { x: w/2, y: h/2, r: 0, s: 2.5, flipX: 1, flipY: 1 };
+                        ctx.save(); 
+                        if(State.blur > 0) ctx.filter = `blur(${State.blur}px)`;
+                        ctx.translate(img.ft.x, img.ft.y); 
+                        ctx.rotate(img.ft.r);
+                        ctx.scale(img.ft.flipX || 1, img.ft.flipY || 1);
                         const ih = h*0.4 * img.ft.s, iw = ih * (img.width/img.height);
-                        ctx.drawImage(img, -iw/2, -ih/2, iw, ih); ctx.restore();
+                        ctx.drawImage(img, -iw/2, -ih/2, iw, ih); 
+                        ctx.restore();
                     });
                 }
                 else if (State.grid === 'photobooth') { const n = Math.max(1, imgs.length); const ch = (h - p * (n + 1)) / n; const cw = w - p * 2; for(let i=0; i<n; i++) drawC(getI(i), p, p + i*(ch+p), cw, ch); }
@@ -1382,6 +1467,15 @@
 
                 for (let i = 0; i < d.length; i += 4) {
                     let r = d[i], g = d[i+1], b = d[i+2]; 
+
+                    // SATURATION
+                    if (State.sat !== 0) {
+                        let lum = r*0.3 + g*0.59 + b*0.11;
+                        let satMult = (State.sat + 100) / 100;
+                        r = lum + (r - lum) * satMult;
+                        g = lum + (g - lum) * satMult;
+                        b = lum + (b - lum) * satMult;
+                    }
 
                     r = cont*(r-128)+128+exp; g = cont*(g-128)+128+exp; b = cont*(b-128)+128+exp;
                     let rb=r, gb=g, bb=b;
@@ -1428,7 +1522,9 @@
                         const n = noiseBuf[ny * Math.ceil(w/ns) + nx];
                         r+=n; g+=n; b+=n; 
                     }
-                    d[i]=r; d[i+1]=g; d[i+2]=b;
+                    d[i]=Math.max(0, Math.min(255, r)); 
+                    d[i+1]=Math.max(0, Math.min(255, g)); 
+                    d[i+2]=Math.max(0, Math.min(255, b));
                 }
 
                 if (rgbShift > 0) { for (let i = d.length - 1; i >= rgbShift; i -= 4) d[i - 3] = d[i - 3 - rgbShift]; }
@@ -1444,6 +1540,22 @@
             },
 
             drawOverlays: (ctx, w, h) => {
+                
+                // DRAWINGS (Brush) Rendered first so frames can overlay them
+                State.drawings.forEach(stroke => {
+                    if (stroke.points.length === 0) return;
+                    ctx.beginPath();
+                    ctx.strokeStyle = stroke.color;
+                    ctx.lineWidth = stroke.size;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                    for(let i=1; i<stroke.points.length; i++) {
+                        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                    }
+                    ctx.stroke();
+                });
+
                 const s = State.frame;
                 const fSize = State.frameFSize;
                 const fTitle = State.frameTitle;
